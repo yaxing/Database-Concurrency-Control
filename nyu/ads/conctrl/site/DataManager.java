@@ -2,6 +2,7 @@
  * DataManager class
  * 
  * hold and manage all data on this site
+ * perform data operations, after locks are retrieved by site
  * 
  * @author Yaxing Chen(N16929794)
  *
@@ -15,33 +16,58 @@ import nyu.ads.conctrl.site.entity.*;
 
 public class DataManager {
 
-	private HashMap<String, String> db;// actual db on this server, "resource"=>"value"
+	public HashMap<String, String> db;// actual db on this server, "resource"=>"value"
+	public String[] uniqueRes; // used when recover, to lock 
 	
-	private ArrayList<TransactionLogItemEnty> transactionLog; // transaction log: String[5] : 
+	public ArrayList<TransactionLogItemEnty> transactionLog; // transaction log: String[5] : 
 										// [0]: Transactin No
 										// [1]: op (W/R)
 										// [2]: source index
 										// [3]: operation value
 										// [4]: operation result(successful or not): 1/0
 	
-	private ArrayList<CommitLogItemEnty> commitLog; // commit log: String[4]:
-								   // [0]: Transactin No
-								   // [1]: op (W/R)
-								   // [2]: source index
-								   // [3]: operation value
+	private ArrayList<Integer> commitLog; // commit log: commited transactions
 	
 	DataManager() {
 		this.db = new HashMap<String, String>();
 		this.transactionLog = new ArrayList<TransactionLogItemEnty>();
-		this.commitLog = new ArrayList<CommitLogItemEnty>();
+		this.commitLog = new ArrayList<Integer>();
 	}
 	
+	/**
+	 * write transaction log
+	 * @param transacId
+	 * @param op
+	 * @param resource
+	 * @param value
+	 * @param abort
+	 */
 	private void logTransaction(int transacId, OpCode op, String resource, String value, boolean abort) {
 		transactionLog.add(new TransactionLogItemEnty(transacId, op, resource, value, abort));
 	}
 	
-	public void newRes(String res) {
-		this.db.put(res, null);
+	/**
+	 * write commit log
+	 * @param transaction id
+	 */
+	private void logCommit(int transactionId) {
+		this.commitLog.add(transactionId);
+	}
+	
+	/**
+	 * add new resource when initiating site
+	 * @param resFull
+	 */
+	public void newRes(String resFull) {
+		this.db.put(resFull, null);
+	}
+	
+	/**
+	 * define which resources are unique on this site
+	 * @param uniqueRes
+	 */
+	public void setUniqRes(String[] uniqueRes) {
+		this.uniqueRes = uniqueRes;
 	}
 	
 	/**
@@ -53,15 +79,30 @@ public class DataManager {
 		logTransaction(transacId, OpCode.Write, res, value, false);
 	}
 	
-	public void read(int transacId, String res) {
+	/**
+	 * read resource, return read value
+	 * @param transacId
+	 * @param res
+	 * @return String read value
+	 */
+	public String read(int transacId, String res) {
 		logTransaction(transacId, OpCode.Read, res, null, true);
+		return this.db.get(res);
 	}
 	
+	/**
+	 * commit transaction T
+	 * write log data into real db.
+	 * write commit Log
+	 * clear corresponding recovery locks, if exist
+	 * @param transacId
+	 * @return
+	 */
 	public boolean commitT(int transacId) {
 		/*
 		 * write db
-		 * 
-		 * delete corresponding transaction log item
+		 * write commit Log
+		 * clear corresponding recovery locks, if exist  
 		 */
 		
 		int count = 0;
@@ -72,15 +113,35 @@ public class DataManager {
 				}
 			}
 		}
-		for(TransactionLogItemEnty item : transactionLog) {
-			commitLog.add(new CommitLogItemEnty(item.transactionId, item.operation, item.resource, item.value));
-			transactionLog.remove(count ++);
-		}
+		return true;
+	}
+	/**
+	 * recover transactions after server failed and restarted
+	 * recover from transaction log and commit log, recover only committed transactions
+	 * require recover lock for all replicated resources
+	 * @return boolean
+	 */
+	public boolean recover() {
+		/*
+		 * 
+		 */
 		return true;
 	}
 	
-	public boolean recover() {
-		//recover transactions after server failed and restarted
-		return true;
+	/**
+	 * return all db resources, that is, committed values
+	 * @return String a structured String that can be parsed by TM
+	 */
+	public String dump() {
+		return null;
+	}
+	
+	/**
+	 * return designated resource's committed value
+	 * @param traget resource name
+	 * @return String a structured String that can be parsed by TM
+	 */
+	public String dump(String traget) {
+		return null;
 	}
 }
