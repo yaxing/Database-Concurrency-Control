@@ -42,7 +42,7 @@ public class DataManager {
 	/**
 	 * write resource, write into log
 	 * @param resId
-	 * @return
+	 * @return 
 	 */
 	public void write(int resId, int transacId, String value) {
 		logTransaction(transacId, "W", resId, value, false);
@@ -50,5 +50,12 @@ public class DataManager {
 	
 	public void read(int resId, int transacId, String value) {
 		logTransaction(transacId, "R", resId, value, true);
+	}
+	
+	public boolean commitT(int transacId) {
+		for(TransactionLogItemEnty item : transactionLog) {
+			commitLog.add(new CommitLogItemEnty(item.transactionId, item.operation, item.resourceId, item.value));
+		}
+		return true;
 	}
 }

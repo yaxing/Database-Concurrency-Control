@@ -7,11 +7,11 @@
 package nyu.ads.conctrl.site.entity;
 
 public class TransactionLogItemEnty {
-	int transactionId;
-	String operation; //W/R 
-	int resourceId;
-	String value;
-	boolean abort;
+	public int transactionId;
+	public String operation; //W/R 
+	public int resourceId;
+	public String value;
+	public boolean abort;
 	
 	public TransactionLogItemEnty(int id, String op, int resId, String value, boolean abort) {
 		this.transactionId = id;

@@ -82,8 +82,4 @@ public class Site{
 	public boolean abortT(int transacId) {
 		return true;
 	}
-	
-	public boolean commitT(int transacId) {
-		return true;
-	}
 }

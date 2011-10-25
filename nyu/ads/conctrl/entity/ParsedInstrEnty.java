@@ -1,10 +1,10 @@
 package nyu.ads.conctrl.entity;
 
 public class ParsedInstrEnty {
-	String opcode;
-	int transactionId;
-	String resource;
-	String value;
+	public String opcode;
+	public int transactionId;
+	public String resource;
+	public String value;
 	
 	public ParsedInstrEnty(String opcode, int transactionId, String resource, String value) {
 		this.opcode = opcode;
