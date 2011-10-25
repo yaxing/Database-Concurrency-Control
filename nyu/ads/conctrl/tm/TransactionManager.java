@@ -36,6 +36,8 @@ public class TransactionManager {
 		inputScanner.useDelimiter(System.getProperty("line.separator"));
 		String inputLine = "";
 		
+		transManager.initSites();
+		
 		do {
 			// get line of user input
 			inputLine = inputScanner.next();
@@ -49,6 +51,20 @@ public class TransactionManager {
 				transManager.process(i);
 			}			
 		} while (!inputLine.equalsIgnoreCase("exit")); 
+	}
+
+	/**
+	 * Initialize the variable lists at the sites
+	 */
+	private void initSites() {
+		// init sites
+		for (int i = 0; i<10; i++)
+		{
+			Site s = new Site();
+			String[] variables = {"x2", "x4", "x6"};
+			s.initResources(variables);
+			siteList.add(s);
+		}
 	}
 
 	/**
@@ -73,17 +89,28 @@ public class TransactionManager {
 				break;
 			case Dump:
 				// send message to applicable sites
+				siteList.get(0).query();
 				break;
 			case Fail:
 				// send message to applicable site
+				siteList.get(0).fail();
 				break;
 			case Recover:
 				// send message to applicable site
+				siteList.get(0).recover();
 			case Read:
 			case Write:
 				// send message to applicable sites
 				// recieve receipt
-				// perform wait-die protocol
+				siteList.get(0).setBuffer(i);
+				ConflictRespEnty conflict = siteList.get(0).process();
+				
+				if (conflict != null)
+				{
+					// perform wait-die protocol
+					
+				}
+				
 				break;
 		}		
 	}
