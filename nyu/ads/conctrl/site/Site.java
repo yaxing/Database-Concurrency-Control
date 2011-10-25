@@ -75,9 +75,10 @@ public class Site{
 		return true;
 	}
 	
-	public void initResources(String[] res) {
-		for(String item : res) {
+	public void initResources(String[] resFull, String[] resUniq) {
+		for(String item : resFull) {
 			this.dataMng.newRes(item);
 		}
+		this.dataMng.setUniqRes(resUniq);
 	}
 }

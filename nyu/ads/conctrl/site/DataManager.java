@@ -16,6 +16,7 @@ import nyu.ads.conctrl.site.entity.*;
 public class DataManager {
 
 	private HashMap<String, String> db;// actual db on this server, "resource"=>"value"
+	private String[] uniqueRes; // used when recover, to lock 
 	
 	private ArrayList<TransactionLogItemEnty> transactionLog; // transaction log: String[5] : 
 										// [0]: Transactin No
@@ -40,8 +41,12 @@ public class DataManager {
 		transactionLog.add(new TransactionLogItemEnty(transacId, op, resource, value, abort));
 	}
 	
-	public void newRes(String res) {
-		this.db.put(res, null);
+	public void newRes(String resFull) {
+		this.db.put(resFull, null);
+	}
+	
+	public void setUniqRes(String[] uniqueRes) {
+		this.uniqueRes = uniqueRes;
 	}
 	
 	/**
@@ -81,6 +86,8 @@ public class DataManager {
 	
 	public boolean recover() {
 		//recover transactions after server failed and restarted
+		// recover from transaction log
+		// lock all replicated data as Site id -1
 		return true;
 	}
 }
