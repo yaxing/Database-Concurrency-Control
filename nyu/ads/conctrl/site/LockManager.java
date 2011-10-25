@@ -10,7 +10,7 @@ import nyu.ads.conctrl.entity.*;
 
 public class LockManager {
 	
-	private HashMap<Integer, Integer> locks;	// current locks: "resiable"=>"transaction id"
+	private HashMap<Integer, Integer> locks;	// current locks: "resource"=>"transaction id"
 	
 	public LockManager() {
 		locks = new HashMap<Integer, Integer>(); 
@@ -26,8 +26,14 @@ public class LockManager {
 		}
 	}
 	
-	public void unlock(int res) {
+	public void unlock(String res) {
 		locks.remove(res);
+	} 
+	
+	public void clearTransacLocks(int transacId) {
+		/*
+		 * remove all locks of certain transaction 
+		 */
 	}
 	
 	public void clearLocks() {

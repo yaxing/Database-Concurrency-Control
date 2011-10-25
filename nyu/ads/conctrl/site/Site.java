@@ -82,4 +82,10 @@ public class Site{
 	public boolean abortT(int transacId) {
 		return true;
 	}
+	
+	public void initResources(String[] res) {
+		for(String item : res) {
+			this.dataMng.newRes(item);
+		}
+	}
 }
