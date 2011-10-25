@@ -12,13 +12,13 @@ import nyu.ads.conctrl.tm.entity.*;
  *
  */
 public class TransactionManager {
-	private TransactionTable transTable;  // List of transactions, statuses, and timestamp of origin
+	public TransactionTable transTable;  // List of transactions, statuses, and timestamp of origin
 	
-	private List<WaitingQueue> waitingQueueList; 
+	public List<WaitingQueue> waitingQueueList; 
 	
-	private List<Site> siteList; // list of sites
+	public List<Site> siteList; // list of sites
 	
-	private List<Resource> varList; // List of variables, locations, and latest timestamp  
+	public List<Resource> varList; // List of variables, locations, and latest timestamp  
 	
 	/**
 	 * Default constructor. Initializes all member variables.
@@ -66,7 +66,7 @@ public class TransactionManager {
 	/**
 	 * Initialize the variable lists at the sites
 	 */
-	private void initSites() {
+	public void initSites() {
 		// init sites
 		for (int i = 0; i<10; i++)
 		{
@@ -82,7 +82,7 @@ public class TransactionManager {
 	 * Process method that processes the current instruction.
 	 * @param: the instruction
 	 */
-	private void process(ParsedInstrEnty i) {
+	public void process(ParsedInstrEnty i) {
 		switch(i.opcode) {
 			case Begin:
 			case BeginRO:
@@ -129,7 +129,7 @@ public class TransactionManager {
 	 * @param input to be parsed
 	 * @return the list of instructions
 	 */
-	private List<ParsedInstrEnty> parse(String input) {
+	public List<ParsedInstrEnty> parse(String input) {
 		
 		return null;
 	}

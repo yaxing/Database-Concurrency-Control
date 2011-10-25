@@ -14,7 +14,7 @@ import nyu.ads.conctrl.tm.entity.Transaction;
  *
  */
 public class TransactionTable {
-	private List<Transaction> TransactionList;
+	public List<Transaction> TransactionList;
 	
 	/**
 	 * Default constructor
