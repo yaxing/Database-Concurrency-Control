@@ -1,13 +1,13 @@
+
+package nyu.ads.conctrl.site;
+
+import java.util.*;
+import nyu.ads.conctrl.entity.*;
 /**
  * Class LockManager
  * 
  * @author Yaxing Chen (16929794)
  */
-package nyu.ads.conctrl.site;
-
-import java.util.*;
-import nyu.ads.conctrl.entity.*;
-
 public class LockManager {
 	
 	public HashMap<String, Integer> locks;	// current locks: "resource"=>"transaction id"

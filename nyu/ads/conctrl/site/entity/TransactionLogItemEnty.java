@@ -1,12 +1,14 @@
+
+
+package nyu.ads.conctrl.site.entity;
+
+import nyu.ads.conctrl.entity.*;
+
 /**
  * transaction log item entity
  * 
  * @author Yaxing Chen
  */
-
-package nyu.ads.conctrl.site.entity;
-
-import nyu.ads.conctrl.entity.*;
 public class TransactionLogItemEnty {
 	public int transactionId;
 	public OpCode operation; //W/R 

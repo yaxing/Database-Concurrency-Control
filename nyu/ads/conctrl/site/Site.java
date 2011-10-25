@@ -1,15 +1,15 @@
+
+package nyu.ads.conctrl.site;
+
+import nyu.ads.conctrl.entity.*;
+
+import nyu.ads.conctrl.site.entity.*;
 /**
  * Class Site
  * 
  * @author Yaxing Chen (N16929794)
  *
  */
-package nyu.ads.conctrl.site;
-
-import nyu.ads.conctrl.entity.*;
-
-import nyu.ads.conctrl.site.entity.*;
-
 public class Site{
 	
 	public String buffer;// message buffer, containing instructions for different transactions

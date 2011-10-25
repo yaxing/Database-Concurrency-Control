@@ -1,3 +1,10 @@
+
+package nyu.ads.conctrl.site;
+
+import java.util.*;
+
+import nyu.ads.conctrl.entity.OpCode;
+import nyu.ads.conctrl.site.entity.*;
 /**
  * DataManager class
  * 
@@ -7,13 +14,6 @@
  * @author Yaxing Chen(N16929794)
  *
  */
-package nyu.ads.conctrl.site;
-
-import java.util.*;
-
-import nyu.ads.conctrl.entity.OpCode;
-import nyu.ads.conctrl.site.entity.*;
-
 public class DataManager {
 
 	public HashMap<String, String> db;// actual db on this server, "resource"=>"value"
