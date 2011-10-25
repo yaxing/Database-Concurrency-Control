@@ -1,18 +1,18 @@
-package nyu.ads.conctrl.site;
-
-import nyu.ads.conctrl.entity.*;
-
 /**
  * Class Site
  * 
  * @author Yaxing Chen (N16929794)
  *
  */
-public class Site extends Thread{
+package nyu.ads.conctrl.site;
+
+import nyu.ads.conctrl.entity.*;
+
+import nyu.ads.conctrl.site.entity.*;
+
+public class Site{
 	
 	private String buffer;// message buffer, containing instructions for different transactions
-	
-	private Processor proc;// processor obj, to handle instructions
 	
 	private LockManager lockMng;// lock manager obj, to handle locks in a certain site
 	
@@ -20,9 +20,31 @@ public class Site extends Thread{
 	
 	private int status = 1; //0: failed, 1: running
 	
-	@Override
-	public void run() {
-		
+	/**
+	 * site processor
+	 * 
+	 * control logic
+	 */
+	public void process() {
+		/*
+		 * 1. parse
+		 * 
+		 * 2. execute:
+		 * 
+		 *   W: 
+		 *   1) lockMng.lock()
+		 *   2) if success, dataMng.write()
+		 *   
+		 *   
+		 */
+	}
+	
+	private ParsedInstrEnty parse() {
+		ParsedInstrEnty enty = new ParsedInstrEnty();
+		/*
+		 * parse buffer build enty
+		 */
+		return enty;
 	}
 	
 	public void fail() {
@@ -36,7 +58,7 @@ public class Site extends Thread{
 		this.status = 1;
 	}
 	
-	public int status() {
+	public int getStatus() {
 		return this.status;
 	}
 	
@@ -57,4 +79,11 @@ public class Site extends Thread{
 		this.buffer = null;
 	}
 	
+	public boolean abortT(int transacId) {
+		return true;
+	}
+	
+	public boolean commitT(int transacId) {
+		return true;
+	}
 }
