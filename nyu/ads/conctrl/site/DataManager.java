@@ -15,16 +15,16 @@ import nyu.ads.conctrl.site.entity.*;
 
 public class DataManager {
 
-	HashMap<String, String> db;// actual db on this server, "resource"=>"value"
+	private HashMap<String, String> db;// actual db on this server, "resource"=>"value"
 	
-	ArrayList<TransactionLogItemEnty> transactionLog; // transaction log: String[5] : 
+	private ArrayList<TransactionLogItemEnty> transactionLog; // transaction log: String[5] : 
 										// [0]: Transactin No
 										// [1]: op (W/R)
 										// [2]: source index
 										// [3]: operation value
 										// [4]: operation result(successful or not): 1/0
 	
-	ArrayList<CommitLogItemEnty> commitLog; // commit log: String[4]:
+	private ArrayList<CommitLogItemEnty> commitLog; // commit log: String[4]:
 								   // [0]: Transactin No
 								   // [1]: op (W/R)
 								   // [2]: source index
@@ -76,6 +76,11 @@ public class DataManager {
 			commitLog.add(new CommitLogItemEnty(item.transactionId, item.operation, item.resource, item.value));
 			transactionLog.remove(count ++);
 		}
+		return true;
+	}
+	
+	public boolean recover() {
+		//recover transactions after server failed and restarted
 		return true;
 	}
 }
