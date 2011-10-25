@@ -12,39 +12,42 @@ import nyu.ads.conctrl.site.entity.*;
 
 public class Site{
 	
-	private ParsedInstrEnty buffer;// message buffer, containing instructions for different transactions
+	public String buffer;// message buffer, containing instructions for different transactions
 	
-	private LockManager lockMng;// lock manager obj, to handle locks in a certain site
+	public LockManager lockMng;// lock manager obj, to handle locks in a certain site
 	
-	private DataManager dataMng;// data manager obj, to manage all data in this site, including r/w operations
+	public DataManager dataMng;// data manager obj, to manage all data in this site, including r/w operations
 	
-	private int status = 1; //0: failed, 1: running
+	public int status = 1; //0: failed, 1: running
 	
 	/**
-	 * site processor
+	 * site processor,
+	 * parse messages from buffer and execute,
+	 * require locks from lock manager,
+	 * execute W/R operation through data manager,
 	 * 
-	 * control logic
+	 * able to distinguish between read-only transaction and normal transaction and process differently
+	 * @return String containing execution result that can be parsed by TM
 	 */
-	public ConflictRespEnty process() {
-		/*
-		 * 1. execute:
-		 * 
-		 *   W: 
-		 *   1) lockMng.lock()
-		 *   2) if success, dataMng.write()
-		 *   
-		 *   
-		 */
+	public String process() {
+		
 		return null;
 	}
 	
+	/**
+	 * Fail this site
+	 * clear lock manager & data manager
+	 * change site status
+	 */
 	public void fail() {
-		/*
-		 * clear lock manager, data manager
-		 */
 		this.status = 0;
 	}
 	
+	/**
+	 * recover this site
+	 * change status
+	 * recover data through data manager
+	 */
 	public void recover() {
 		this.status = 1;
 		this.dataMng.recover();
@@ -54,24 +57,36 @@ public class Site{
 		return this.status;
 	}
 	
+	/**
+	 * dump all information on this site, 
+	 * including all locks, resources, status, etc.
+	 * encapsulated as an object and return to TM
+	 * @return SiteQueryEnty query result obj
+	 */
 	public SiteQueryEnty query() {
 		SiteQueryEnty enty = new SiteQueryEnty();
 		/*
 		 * query code
-		 * query lockManager
 		 */
 		return enty;
 	}
 	
-	public void setBuffer(ParsedInstrEnty instr) {
+	/**
+	 * pass message to buffer
+	 * @param String instr
+	 */
+	public void setBuffer(String instr) {
 		this.buffer = instr;
 	}
 	
-	private void clearBuffer() {
-		this.buffer = null;
-	}
-	
+	/**
+	 * abort certain transaction T
+	 * clear all T's info in transaction log, lock table
+	 * @param transacId
+	 * @return boolean
+	 */
 	public boolean abortT(int transacId) {
+		this.lockMng.unlockT(transacId);
 		return true;
 	}
 	
