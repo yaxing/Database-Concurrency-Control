@@ -58,8 +58,34 @@ public class TransactionManager {
 	 * @param: the instruction
 	 */
 	private void process(ParsedInstrEnty i) {
-		// 
-		
+		switch(i.opcode) {
+			case Begin:
+			case BeginRO:
+				// update trans table
+				break;
+			case End:
+				// Two-phase commit:
+				// send message to all sites, get receipts
+				
+				// if all are good to go, send message to commit
+				
+				// update trans table
+				break;
+			case Dump:
+				// send message to applicable sites
+				break;
+			case Fail:
+				// send message to applicable site
+				break;
+			case Recover:
+				// send message to applicable site
+			case Read:
+			case Write:
+				// send message to applicable sites
+				// recieve receipt
+				// perform wait-die protocol
+				break;
+		}		
 	}
 
 	/**
