@@ -16,6 +16,8 @@ public class TransactionManager {
 	
 	private TMProcessor proc; // processor to decide wait-die procedure
 	
+	private List<WaitingQueue> accumulatedQueueList; 
+	
 	private List<Site> siteList; // list of sites
 	
 	private List<Resource> varList; // List of variables, locations, and latest timestamp  
@@ -56,7 +58,7 @@ public class TransactionManager {
 	 * @param: the instruction
 	 */
 	private void process(ParsedInstrEnty i) {
-		
+		// 
 		
 	}
 
