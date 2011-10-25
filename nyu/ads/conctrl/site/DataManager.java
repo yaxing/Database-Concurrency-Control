@@ -8,8 +8,9 @@
  */
 package nyu.ads.conctrl.site;
 
-
 import java.util.*;
+
+import nyu.ads.conctrl.entity.OpCode;
 import nyu.ads.conctrl.site.entity.*;
 
 public class DataManager {
@@ -35,8 +36,12 @@ public class DataManager {
 		this.commitLog = new ArrayList<CommitLogItemEnty>();
 	}
 	
-	private void logTransaction(int transacId, String op, int resourceId, String value, boolean abort) {
-		transactionLog.add(new TransactionLogItemEnty(transacId, op, resourceId, value, abort));
+	private void logTransaction(int transacId, OpCode op, String resource, String value, boolean abort) {
+		transactionLog.add(new TransactionLogItemEnty(transacId, op, resource, value, abort));
+	}
+	
+	public void newRes(String res) {
+		this.db.put(res, null);
 	}
 	
 	/**
@@ -44,17 +49,32 @@ public class DataManager {
 	 * @param resId
 	 * @return 
 	 */
-	public void write(int resId, int transacId, String value) {
-		logTransaction(transacId, "W", resId, value, false);
+	public void write(int transacId, String res, String value) {
+		logTransaction(transacId, OpCode.Write, res, value, false);
 	}
 	
-	public void read(int resId, int transacId, String value) {
-		logTransaction(transacId, "R", resId, value, true);
+	public void read(int transacId, String res) {
+		logTransaction(transacId, OpCode.Read, res, null, true);
 	}
 	
 	public boolean commitT(int transacId) {
+		/*
+		 * write db
+		 * 
+		 * delete corresponding transaction log item
+		 */
+		
+		int count = 0;
 		for(TransactionLogItemEnty item : transactionLog) {
-			commitLog.add(new CommitLogItemEnty(item.transactionId, item.operation, item.resourceId, item.value));
+			if(item.operation.equals(OpCode.Write)) {
+				if(this.db.containsKey(item.resource)) {
+					this.db.put(item.resource, item.value);
+				}
+			}
+		}
+		for(TransactionLogItemEnty item : transactionLog) {
+			commitLog.add(new CommitLogItemEnty(item.transactionId, item.operation, item.resource, item.value));
+			transactionLog.remove(count ++);
 		}
 		return true;
 	}
