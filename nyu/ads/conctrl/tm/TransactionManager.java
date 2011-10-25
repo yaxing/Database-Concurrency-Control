@@ -14,9 +14,7 @@ import nyu.ads.conctrl.tm.entity.*;
 public class TransactionManager {
 	private TransactionTable transTable;  // List of transactions, statuses, and timestamp of origin
 	
-	private TMProcessor proc; // processor to decide wait-die procedure
-	
-	private List<WaitingQueue> accumulatedQueueList; 
+	private List<WaitingQueue> waitingQueueList; 
 	
 	private List<Site> siteList; // list of sites
 	
@@ -27,6 +25,7 @@ public class TransactionManager {
 		proc = new TMProcessor();
 		siteList = new ArrayList<Site>();
 		varList = new ArrayList<Resource>();
+		waitingQueueList = new ArrayList<WaitingQueue>();
 	}
 	
 	public static void main(String[] args) {
@@ -44,6 +43,11 @@ public class TransactionManager {
 			
 			// parse input into instruction list
 			List<ParsedInstrEnty> instructionList = transManager.parse(inputLine);
+			
+			// check WaitingQueues
+			if (transManager.waitingQueueList.size() > 0) {
+				// check to see if the transactions are still blocked
+			}
 			
 			for (ParsedInstrEnty i : instructionList)
 			{
