@@ -6,9 +6,7 @@ import nyu.ads.conctrl.entity.ParsedInstrEnty;
 
 /**
  * WaitingQueue
- * 
  * A list of instructions of a blocked transaction instructions
- * 
  * @author Matt
  *
  */
@@ -16,7 +14,11 @@ import nyu.ads.conctrl.entity.ParsedInstrEnty;
 public class WaitingQueue {
 	public int transId;
 	public List<ParsedInstrEnty> waitingQueue;
-	
+
+	/**
+	 * Constructor using a transaction ID
+	 * @param transID
+	 */
 	public WaitingQueue(int t) {
 		transId = t;
 		waitingQueue = new ArrayList<ParsedInstrEnty>();

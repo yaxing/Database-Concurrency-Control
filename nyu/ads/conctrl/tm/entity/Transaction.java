@@ -2,39 +2,26 @@ package nyu.ads.conctrl.tm.entity;
 
 import java.util.*;
 
+/**
+ * Entity representing a Transaction
+ * @author Matt
+ *
+ */
 public class Transaction {
-	private Integer number;
-	private Integer timestamp;
-	private int status;
+	public int transID;
+	public Integer timestamp;
+	public int status;
 	
-	public Transaction(Integer number, Integer timestamp, int status) {
+	/**
+	 * Constructor from fields
+	 * @param transID
+	 * @param timestamp
+	 * @param status
+	 */
+	public Transaction(int transID, Integer timestamp, int status) {
 		super();
-		this.number = number;
+		this.transID = transID;
 		this.timestamp = timestamp;
-		this.status = status;
-	}
-
-	public Integer getNumber() {
-		return number;
-	}
-
-	public void setNumber(Integer number) {
-		this.number = number;
-	}
-
-	public Integer getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(Integer timestamp) {
-		this.timestamp = timestamp;
-	}
-
-	public int getStatus() {
-		return status;
-	}
-
-	public void setStatus(int status) {
 		this.status = status;
 	}
 }

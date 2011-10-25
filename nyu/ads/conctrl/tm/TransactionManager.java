@@ -20,14 +20,20 @@ public class TransactionManager {
 	
 	private List<Resource> varList; // List of variables, locations, and latest timestamp  
 	
+	/**
+	 * Default constructor. Initializes all member variables.
+	 */
 	public TransactionManager() {
 		transTable = new TransactionTable();
-		proc = new TMProcessor();
 		siteList = new ArrayList<Site>();
 		varList = new ArrayList<Resource>();
 		waitingQueueList = new ArrayList<WaitingQueue>();
 	}
 	
+	/**
+	 * Entry function to the program.
+	 * @param [the input file of instructions]
+	 */
 	public static void main(String[] args) {
 		TransactionManager transManager = new TransactionManager();
 		
@@ -65,16 +71,15 @@ public class TransactionManager {
 		for (int i = 0; i<10; i++)
 		{
 			Site s = new Site();
-			String[] variables = {"x2", "x4", "x6"};
-			s.initResources(variables);
+			String[] variables = {"x1", "x2", "x4", "x6"};
+			String[] uniqueVariables = {"x1"};
+			s.initResources(variables, uniqueVariables);
 			siteList.add(s);
 		}
 	}
 
 	/**
-	 * Process method
-	 * Process the current instruction.
-	 * 
+	 * Process method that processes the current instruction.
 	 * @param: the instruction
 	 */
 	private void process(ParsedInstrEnty i) {
@@ -106,10 +111,10 @@ public class TransactionManager {
 			case Write:
 				// send message to applicable sites
 				// recieve receipt
-				siteList.get(0).setBuffer(i);
-				ConflictRespEnty conflict = siteList.get(0).process();
+				siteList.get(0).setBuffer(i.toString());
+				String conflict = siteList.get(0).process();
 				
-				if (conflict != null)
+				if (!conflict.isEmpty())
 				{
 					// perform wait-die protocol
 					
@@ -120,7 +125,7 @@ public class TransactionManager {
 	}
 
 	/**
-	 * 
+	 * Parse the input string and create an list of instructions
 	 * @param input to be parsed
 	 * @return the list of instructions
 	 */

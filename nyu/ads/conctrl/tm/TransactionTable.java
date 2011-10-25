@@ -16,31 +16,63 @@ import nyu.ads.conctrl.tm.entity.Transaction;
 public class TransactionTable {
 	private List<Transaction> TransactionList;
 	
+	/**
+	 * Default constructor
+	 */
 	public TransactionTable() {
 		TransactionList = new ArrayList<Transaction>();
 	}
 	
+	/**
+	 * Add a transaction to the table
+	 * @param trans
+	 */
 	public void addTransaction(Transaction t) {
 		TransactionList.add(t);
 	}
 	
-	public void updateTransactionStatus(Integer number, int status)
+	/**
+	 * Update the status of a transaction
+	 * @param transID
+	 * @param status
+	 */
+	public void updateTransactionStatus(int transID, int status)
 	{
 		for (Transaction t : TransactionList) {
-			if (t.getNumber() == number) {
-				t.setStatus(status);
+			if (t.transID == transID) {
+				t.status = status;
 			}
 		}
 	}
 	
-	public Integer getTimestamp(Integer number)
+	/**
+	 * Get the timestamp of a transaction
+	 * @param transID
+	 * @return timestamp
+	 */
+	public int getTimestamp(int number)
 	{
 		for (Transaction t : TransactionList) {
-			if (t.getNumber() == number) {
-				return t.getTimestamp();
+			if (t.transID == number) {
+				return t.timestamp;
 			}
 		}
-		return null;
+		return -1;
+	}
+	
+	/**
+	 * Get the status of a transaction
+	 * @param transID
+	 * @return timestamp
+	 */
+	public int getStatus(int transId)
+	{
+		for (Transaction t : TransactionList) {
+			if (t.transID == transId) {
+				return t.status;
+			}
+		}
+		return -1;
 	}
 	
 }
