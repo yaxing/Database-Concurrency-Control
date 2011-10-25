@@ -10,13 +10,13 @@ import nyu.ads.conctrl.entity.*;
 
 public class LockManager {
 	
-	private HashMap<Integer, Integer> locks;	// current locks: "resource"=>"transaction id"
+	private HashMap<String, Integer> locks;	// current locks: "resource"=>"transaction id"
 	
 	public LockManager() {
-		locks = new HashMap<Integer, Integer>(); 
+		locks = new HashMap<String, Integer>(); 
 	}
 	
-	public ConflictRespEnty lock(int transacId, int res) {
+	public ConflictRespEnty lock(int transacId, String res) {
 		if(locks.containsKey(res)) {
 			return new ConflictRespEnty(locks.get(res), transacId, res);
 		}
