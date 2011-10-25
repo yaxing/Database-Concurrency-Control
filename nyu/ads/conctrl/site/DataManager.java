@@ -144,4 +144,15 @@ public class DataManager {
 	public String dump(String traget) {
 		return null;
 	}
+	
+	/**
+	 * prepare to commit a certain transaction
+	 * return true of false to TM
+	 * @param transacId
+	 * @return
+	 */
+	public boolean prepareCommitT(int transacId) {
+		
+		return true;
+	}
 }
