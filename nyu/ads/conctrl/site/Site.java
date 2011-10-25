@@ -12,7 +12,7 @@ import nyu.ads.conctrl.site.entity.*;
 
 public class Site{
 	
-	private String buffer;// message buffer, containing instructions for different transactions
+	private ParsedInstrEnty buffer;// message buffer, containing instructions for different transactions
 	
 	private LockManager lockMng;// lock manager obj, to handle locks in a certain site
 	
@@ -25,11 +25,9 @@ public class Site{
 	 * 
 	 * control logic
 	 */
-	public void process() {
+	public ConflictRespEnty process() {
 		/*
-		 * 1. parse
-		 * 
-		 * 2. execute:
+		 * 1. execute:
 		 * 
 		 *   W: 
 		 *   1) lockMng.lock()
@@ -37,14 +35,7 @@ public class Site{
 		 *   
 		 *   
 		 */
-	}
-	
-	private ParsedInstrEnty parse() {
-		ParsedInstrEnty enty = new ParsedInstrEnty();
-		/*
-		 * parse buffer build enty
-		 */
-		return enty;
+		return null;
 	}
 	
 	public void fail() {
@@ -71,7 +62,7 @@ public class Site{
 		return enty;
 	}
 	
-	public void setBuffer(String instr) {
+	public void setBuffer(ParsedInstrEnty instr) {
 		this.buffer = instr;
 	}
 	
