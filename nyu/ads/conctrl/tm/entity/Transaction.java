@@ -1,4 +1,4 @@
-package nyu.ads.conctrl.tm;
+package nyu.ads.conctrl.tm.entity;
 
 import java.util.*;
 

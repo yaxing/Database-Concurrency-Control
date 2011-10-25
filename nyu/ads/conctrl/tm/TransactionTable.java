@@ -1,6 +1,9 @@
 package nyu.ads.conctrl.tm;
 
 import java.util.*;
+
+import nyu.ads.conctrl.tm.entity.Transaction;
+
 /**
  * Transaction Table class
  * 
