@@ -11,17 +11,22 @@ public class Transaction {
 	public int transID;
 	public Integer timestamp;
 	public int status;
+	public Boolean readOnly;
+	public Boolean shouldAbort;
 	
 	/**
 	 * Constructor from fields
 	 * @param transID
 	 * @param timestamp
 	 * @param status
+	 * @param readOnly
 	 */
-	public Transaction(int transID, Integer timestamp, int status) {
+	public Transaction(int transID, Integer timestamp, int status, Boolean readOnly) {
 		super();
 		this.transID = transID;
 		this.timestamp = timestamp;
 		this.status = status;
+		this.readOnly = readOnly;
+		this.shouldAbort = false;
 	}
 }
