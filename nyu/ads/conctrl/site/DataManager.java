@@ -43,6 +43,10 @@ public class DataManager {
 	
 	public void newRes(String resFull) {
 		this.db.put(resFull, null);
+		
+		/*
+		 * then lock all replicated data as id -1
+		 */
 	}
 	
 	public void setUniqRes(String[] uniqueRes) {
