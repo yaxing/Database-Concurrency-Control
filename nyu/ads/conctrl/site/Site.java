@@ -45,8 +45,9 @@ public class Site{
 		this.status = 0;
 	}
 	
-	public void startup() {
+	public void recover() {
 		this.status = 1;
+		this.dataMng.recover();
 	}
 	
 	public int getStatus() {
