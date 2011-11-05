@@ -1,6 +1,6 @@
 OPCODE [T_NAME] [TIMESTAMP] [W/R/RO] [VAR_NAME] [VALUE]
 
-T M => Site
+TM => Site
 
 1. transaction instruction  INSTR T_NAME TIMSTAMP W/R/RO VAR_NAME VALUE
 INSTR 1 0 W X1 19
@@ -29,7 +29,7 @@ DUMP X1
 INIT X1:19 X2:12:UNIQ X6:15
 
 
-Site => T M
+Site => TM
 1. execution response EXE_RESP 1/0 [T_NAME_HOLDER] [T_NAME_REQ] [V_NAME:V_VALUE]
 successful:
 EXE_RESP 1
