@@ -24,6 +24,10 @@ DUMP X1
 
 7. recover RECOVER
 
+8. initial variables INIT [VAR_NAME:V_VALUE:UNIQ]
+
+INIT X1:19 X2:12:UNIQ X6:15
+
 
 Site => T M
 1. execution response EXE_RESP 1/0 [T_NAME_HOLDER] [T_NAME_REQ] [V_NAME:V_VALUE]
