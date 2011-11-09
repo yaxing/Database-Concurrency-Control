@@ -16,7 +16,8 @@ import nyu.ads.conctrl.site.entity.*;
  */
 public class DataManager {
 
-	public HashMap<String, String> db;// actual db on this server, "resource"=>"value"
+	public HashMap<String, String> db;//stable storage, actual db on this server, resource=>value
+	public HashMap<String, String> tmpDb; //tmp storage, containing un-committed data
 	public String[] uniqueRes; // used when recover, to lock 
 	
 	public ArrayList<TransactionLogItemEnty> transactionLog; // transaction log: String[5] : 

@@ -30,7 +30,15 @@ public class Site{
 	 * @return String containing execution result that can be parsed by TM
 	 */
 	public String process() {
-		
+		String[] msg = buffer.split(" ");
+		InstrCode opcode = InstrCode.valueOf(msg[0]);
+		StringBuilder result = new StringBuilder();
+		switch(opcode) {
+		case INSTR:
+			op_instr(msg, result);
+			break;
+		}
+		System.out.println(result.toString());
 		return null;
 	}
 	
@@ -95,5 +103,18 @@ public class Site{
 			this.dataMng.newRes(item);
 		}
 		this.dataMng.setUniqRes(resUniq);
+	}
+	
+	public void op_instr(String[] msg, StringBuilder result) {
+		//result.append(msg[0]);
+	}
+	
+	/*
+	 * test
+	 */
+	public static void main(String[] args) {
+		Site s = new Site();
+		s.setBuffer("INSTR 1 0 W X1 19");
+		s.process();
 	}
 }
