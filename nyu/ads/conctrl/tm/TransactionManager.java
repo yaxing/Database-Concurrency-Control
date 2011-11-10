@@ -20,6 +20,8 @@ public class TransactionManager {
 	
 	public List<Resource> varList; // List of variables, locations, and latest timestamp  
 	
+	public Date currentTimestamp;
+	
 	/**
 	 * Default constructor. Initializes all member variables.
 	 */
@@ -44,6 +46,9 @@ public class TransactionManager {
 		transManager.initSites();
 		
 		do {
+			// set the new current timestamp
+			transManager.currentTimestamp = new Date();
+			
 			// get line of user input
 			inputLine = inputScanner.next();
 			
@@ -85,8 +90,24 @@ public class TransactionManager {
 	public void process(ParsedInstrEnty i) {
 		switch(i.opcode) {
 			case Begin:
+				// update trans table
+				Transaction t = new Transaction();
+				t.transID = i.transactionId;
+				t.timestamp = currentTimestamp;
+				t.status = 1;
+				t.readOnly = false;
+				
+				transTable.addTransaction(t);
+				break;
 			case BeginRO:
 				// update trans table
+				Transaction tro = new Transaction();
+				tro.transID = i.transactionId;
+				tro.timestamp = currentTimestamp;
+				tro.status = 1;
+				tro.readOnly = true;
+				
+				transTable.addTransaction(tro);
 				break;
 			case End:
 				// Two-phase commit:
@@ -112,17 +133,51 @@ public class TransactionManager {
 				// send message to applicable sites
 				// recieve receipt
 				siteList.get(0).setBuffer(i.toString());
-				String conflict = siteList.get(0).process();
+				String response = siteList.get(0).process();
 				
-				if (!conflict.isEmpty())
+				// parse response
+				StringTokenizer st = new StringTokenizer(response);
+				String op = st.nextToken();
+				String result = st.nextToken();
+				
+				if (result.equals("0"))
 				{
-					// perform wait-die protocol
+					// EXE_RESP 0 [T_NAME_HOLDER] [T_NAME_REQ]
+					// perform wait-die protocol	
+					int holderID = new Integer(st.nextToken());
+					int reqID = new Integer(st.nextToken());
+					Date holderTimestamp = transTable.getTimestamp(holderID);
+					Date reqTimestamp = transTable.getTimestamp(reqID);
 					
+					if (holderTimestamp.before(reqTimestamp)) {
+						// abort req
+						sendAllSites("ABORT " + reqID);
+					} else {
+						// abort holder
+						sendAllSites("ABORT " + reqID);
+					}					
 				}
 				
 				break;
 		}		
 	}
+	
+	/**
+	 * Sends all sites the same command, and returns the list of the repsonses
+	 * @param command
+	 * @return response list
+	 */
+	public List<String> sendAllSites(String command) {
+		List<String> responseList = new ArrayList<String>();
+		
+		for(int i = 0; i < siteList.size(); i++) {
+			siteList.get(i).setBuffer(command);
+			responseList.add(siteList.get(i).process());
+		}
+		
+		return responseList;
+	}
+	
 
 	/**
 	 * Parse the input string and create an list of instructions
@@ -130,6 +185,10 @@ public class TransactionManager {
 	 * @return the list of instructions
 	 */
 	public List<ParsedInstrEnty> parse(String input) {
+		List<ParsedInstrEnty> instrList = new ArrayList<ParsedInstrEnty>();
+		
+		instrList.add(new ParsedInstrEnty(OpCode.Begin, 1, null, null, "begin(T1)"));
+		instrList.add(new ParsedInstrEnty(OpCode.Begin, 2, null, null, "begin(T2)"));
 		
 		return null;
 	}

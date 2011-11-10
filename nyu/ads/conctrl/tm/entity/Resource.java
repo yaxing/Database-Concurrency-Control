@@ -11,6 +11,8 @@ import java.util.*;
 public class Resource {
 	public String name;
 	public String value;
+	public List<Integer> locations;
+	public Date timestamp;
 	
 	/**
 	 * Constructor from fields

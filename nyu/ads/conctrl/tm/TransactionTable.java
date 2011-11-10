@@ -50,14 +50,14 @@ public class TransactionTable {
 	 * @param transID
 	 * @return timestamp
 	 */
-	public int getTimestamp(int number)
+	public Date getTimestamp(int number)
 	{
 		for (Transaction t : TransactionList) {
 			if (t.transID == number) {
 				return t.timestamp;
 			}
 		}
-		return -1;
+		return null;
 	}
 	
 	/**
