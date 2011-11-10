@@ -18,7 +18,9 @@ public class TransactionManager {
 	
 	public List<Site> siteList; // list of sites
 	
-	public List<Resource> varList; // List of variables, locations, and latest timestamp  
+	public List<Resource> varList; // List of variables, and latest timestamp 
+	
+	public Map<String, List<Integer>> varLocations;
 	
 	public Date currentTimestamp;
 	
@@ -30,6 +32,7 @@ public class TransactionManager {
 		siteList = new ArrayList<Site>();
 		varList = new ArrayList<Resource>();
 		waitingQueueList = new ArrayList<WaitingQueue>();
+		varLocations = new HashMap<String, List<Integer>>();
 	}
 	
 	/**
@@ -73,13 +76,34 @@ public class TransactionManager {
 	 */
 	public void initSites() {
 		// init sites
-		for (int i = 0; i<10; i++)
-		{
-			Site s = new Site();
-			String[] variables = {"x1", "x2", "x4", "x6"};
-			String[] uniqueVariables = {"x1"};
-			s.initResources(variables, uniqueVariables);
-			siteList.add(s);
+		Site s = new Site();
+		String[] variables = {"X1", "X2", "X4", "X6"};
+		String[] uniqueVariables = {"X1"};
+		s.initResources(variables, uniqueVariables);
+		siteList.add(s);
+		
+		addVariableLocations(variables, 1);
+	
+		s = new Site();
+		String[] variables2 = {"X4", "X2", "X6", "X7"};
+		String[] uniqueVariables2= {"X7"};
+		s.initResources(variables2, uniqueVariables2);
+		siteList.add(s);
+		
+		addVariableLocations(variables, 2);
+	}
+	
+	public void addVariableLocations(String[] variables, int site) {
+		for (int i = 0; i < variables.length; i++) {
+			if (varLocations.containsKey(variables[i])) {
+				List<Integer> curr = varLocations.get(variables[i]);
+				curr.add(new Integer(site));
+			}
+			else {
+				List<Integer> curr = new ArrayList<Integer>();
+				curr.add(new Integer(site));
+				varLocations.put(variables[i], curr);
+			}
 		}
 	}
 
@@ -132,8 +156,11 @@ public class TransactionManager {
 			case Write:
 				// send message to applicable sites
 				// recieve receipt
-				siteList.get(0).setBuffer(i.toString());
-				String response = siteList.get(0).process();
+				int site = varLocations.get(i.resource).indexOf(0);
+				
+				// TODO: send full timestamp?
+				String command = "INSTR " + i.transactionId + " W " + i.resource + " " + i.value;
+				String response = sendToSite(site, command);
 				
 				// parse response
 				StringTokenizer st = new StringTokenizer(response);
@@ -160,6 +187,17 @@ public class TransactionManager {
 				
 				break;
 		}		
+	}
+	
+	/**
+	 * 
+	 * @param site
+	 * @param command
+	 * @return
+	 */
+	public String sendToSite(int site, String command) {
+		siteList.get(site).setBuffer(command);
+		return siteList.get(site).process();
 	}
 	
 	/**

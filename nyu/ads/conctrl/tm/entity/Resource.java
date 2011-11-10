@@ -11,7 +11,6 @@ import java.util.*;
 public class Resource {
 	public String name;
 	public String value;
-	public List<Integer> locations;
 	public Date timestamp;
 	
 	/**
@@ -19,9 +18,10 @@ public class Resource {
 	 * @param name
 	 * @param value
 	 */
-	public Resource(String name, String value) {
+	public Resource(String name, String value, Date timestamp) {
 		super();
 		this.name = name;
 		this.value = value;
+		this.timestamp = timestamp;
 	}	
 }
