@@ -13,7 +13,8 @@ public class LockManager {
 	public HashMap<String, Integer> locks;	// current locks: "resource"=>"transaction id"
 	
 	public HashMap<String, Integer> recoverLocks; // replicated resources that are locked from reading when site recover
-													// delete when certain resource is committed written
+												  // delete when certain resource is committed written
+												  // locked as -1
 	
 	public LockManager() {
 		locks = new HashMap<String, Integer>(); 
@@ -27,10 +28,10 @@ public class LockManager {
 	 */
 	public String lock(int transacId, String res) {
 		if(locks.containsKey(res)) {
-			/*
-			 * return conflict commands
-			 */
-			return null;
+			return InstrCode.EXE_RESP + " 0 " + locks.get(res) + " " + transacId;
+		}
+		else if(recoverLocks.containsKey(res)) {
+			return "";
 		}
 		else{
 			locks.put(res, transacId);
@@ -50,10 +51,14 @@ public class LockManager {
 	 * unlock all resources locked by a transaction T
 	 * @param int transacId
 	 */
-	public void unlockT(int transacId) {
-		/*
-		 * traverse lock table, remove related items
-		 */
+	public void unlockTransac(int transacId) {
+		Set<Map.Entry<String, Integer>> entries = locks.entrySet();
+		for(Map.Entry<String, Integer> entry : entries) {
+			int id = entry.getValue();
+			if(id == transacId) {
+				locks.remove(entry.getKey());
+			}
+		}
 	}
 	
 	/**
@@ -61,19 +66,7 @@ public class LockManager {
 	 * @param String res resource Name
 	 */
 	public void recoverLock(String res) {
-		/*
-		 * add res to recoverLocks table
-		 */
-	}
-	
-	/**
-	 * clear locks held by a certain transaction
-	 * @param transacId
-	 */
-	public void clearTransacLocks(int transacId) {
-		/*
-		 * remove all locks of certain transaction 
-		 */
+		recoverLocks.put(res, -1);
 	}
 	
 	/**
