@@ -32,13 +32,40 @@ public class Site{
 	public String process() {
 		String[] msg = buffer.split(" ");
 		InstrCode opcode = InstrCode.valueOf(msg[0]);
-		StringBuilder result = new StringBuilder();
+		String result = null;
 		switch(opcode) {
 		case INSTR:
-			op_instr(msg, result);
+			result = op_instr(msg);
+			break;
+		case PREPARE_COMMIT:
+			result = op_commit_query(Integer.parseInt(msg[1]));
+			break;
+		case COMMIT:
+			result = op_commit(Integer.parseInt(msg[1]));
+			break;
+		case ABORT:
+			result = op_abort(Integer.parseInt(msg[1]));
+			break;
+		case DUMP:
+			String resName = "";
+			if(msg.length >= 2) {
+				resName = msg[1];
+			}
+			result = op_dump(resName);
+			break;
+		case FAIL:
+			op_fail();
+			break;
+		case RECOVER:
+			op_recover();
+			break;
+		case INIT:
+			op_init_res(msg);
+			break;
+		default:
 			break;
 		}
-		System.out.println(result.toString());
+		System.out.println(result);
 		return null;
 	}
 	
@@ -47,7 +74,7 @@ public class Site{
 	 * clear lock manager & data manager
 	 * change site status
 	 */
-	public void fail() {
+	public void op_fail() {
 		this.status = 0;
 	}
 	
@@ -56,7 +83,7 @@ public class Site{
 	 * change status
 	 * recover data through data manager
 	 */
-	public void recover() {
+	public void op_recover() {
 		this.status = 1;
 		this.dataMng.recover();
 	}
@@ -88,27 +115,39 @@ public class Site{
 	}
 	
 	/**
+	 * resList containing opcode INIT, so res list starts from resList[1]
+	 * @param resList
+	 */
+	public void op_init_res(String[] resList) {
+		
+	}
+	
+	public String op_instr(String[] msg) {
+		return null;
+	}
+	
+	public String op_commit_query(int transactionId) {
+		return null;
+	}
+	
+	public String op_commit(int trasactionId) {
+		return null;
+	}
+	
+	/**
 	 * abort certain transaction T
 	 * clear all T's info in transaction log, lock table
 	 * @param transacId
 	 * @return boolean
 	 */
-	public boolean abortT(int transacId) {
-		this.lockMng.unlockT(transacId);
-		return true;
+	public String op_abort(int transactionId) {
+		return null;
 	}
 	
-	public void initResources(String[] resFull, String[] resUniq) {
-		for(String item : resFull) {
-			this.dataMng.newRes(item);
-		}
-		this.dataMng.setUniqRes(resUniq);
+	public String op_dump(String resName) {
+		
+		return null;
 	}
-	
-	public void op_instr(String[] msg, StringBuilder result) {
-		//result.append(msg[0]);
-	}
-	
 	/*
 	 * test
 	 */
