@@ -43,12 +43,16 @@ public class LockManager {
 			}
 		}
 		else if(recoverLocks.containsKey(res)) {
-			return "";
+			if(isExclusive) {
+				newLock(transacId, res, isExclusive);
+				return null;
+			}
+			else {
+				return InstrCode.EXE_RESP + "-1";
+			}
 		}
 		else {
-			ArrayList<String> newLock = new ArrayList<String>();
-			newLock.add(lockGen(transacId, isExclusive));
-			locks.put(res, newLock);
+			newLock(transacId, res, isExclusive);
 			return null;
 		}
 	}
@@ -88,6 +92,16 @@ public class LockManager {
 	 */
 	public void clearLocks() {
 		locks.clear();
+	}
+	
+	/**
+	 * first time lock a resource
+	 * @return
+	 */
+	private void newLock(int transacId, String res, boolean isExclusive) {
+		ArrayList<String> newLock = new ArrayList<String>();
+		newLock.add(lockGen(transacId, isExclusive));
+		locks.put(res, newLock);
 	}
 	
 	private String lockGen(int transacId, boolean isExclusive) {
