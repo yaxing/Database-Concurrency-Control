@@ -111,8 +111,9 @@ public class LockManager {
 	public void unlockTransac(int transacId) {
 		Set<Map.Entry<String, HashMap<Integer, Integer>>> entries = locks.entrySet();
 		for(Map.Entry<String, HashMap<Integer, Integer>> entry : entries) {
-			entry.getValue().remove(entry.getKey());
-			if(entry.getValue().isEmpty()) {
+			HashMap<Integer, Integer> lockInfo = entry.getValue();
+			lockInfo.remove(transacId);
+			if(lockInfo.isEmpty()) {
 				locks.remove(entry.getKey());
 			}
 		}
@@ -144,5 +145,10 @@ public class LockManager {
 		System.out.println(lm.lock(0, "X1", false));
 		System.out.println(lm.lock(1, "X1", false));
 		System.out.println(lm.lock(0, "X1", true));
+		System.out.println(lm.locks.toString());
+		lm.unlockTransac(0);
+		System.out.println(lm.locks.toString());
+		lm.unlockTransac(1);
+		System.out.println(lm.locks.toString());
 	}
 }
