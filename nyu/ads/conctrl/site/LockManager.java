@@ -29,23 +29,26 @@ public class LockManager {
 	 * @param res
 	 * @return String NULL: lock retrieved; "conflict: T1, T2": T1 is conflict with T2, T2 holds the lock
 	 */
-	public String lock(int transacId, String res, boolean exclusive) {
+	public String lock(int transacId, String res, boolean isExclusive) {
 		if(locks.containsKey(res)) {
 			ArrayList<String> keyInfo = locks.get(res);
 			String[] tmp = keyInfo.get(0).split(":");
 			int lockType = Integer.parseInt(tmp[1]);
-			if(lockType == 1) {
-				return InstrCode.EXE_RESP + " 0 " + locks.get(res) + " " + transacId;
+			if(lockType == 1 || isExclusive) {
+				return InstrCode.EXE_RESP + " 0 " + locks.get(res).toString() + " " + transacId;
 			}
 			else {
-				
+				keyInfo.add(lockGen(transacId, isExclusive));
+				return null;
 			}
 		}
 		else if(recoverLocks.containsKey(res)) {
 			return "";
 		}
-		else{
-			locks.put(res, transacId);
+		else {
+			ArrayList<String> newLock = new ArrayList<String>();
+			newLock.add(lockGen(transacId, isExclusive));
+			locks.put(res, newLock);
 			return null;
 		}
 	}
@@ -88,6 +91,6 @@ public class LockManager {
 	}
 	
 	private String lockGen(int transacId, boolean isExclusive) {
-		return Integer.toString(transacId) + ":" + (isExclusive ? Integer.toString(1) : Integer.toString(0));
+		return Integer.toString(transacId) + ":" + (isExclusive ? 1 : 0);
 	}
 }
