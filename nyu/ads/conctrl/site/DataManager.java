@@ -81,6 +81,7 @@ public class DataManager {
 	 */
 	public void write(int transacId, String res, String value) {
 		logTransaction(transacId, OpCode.Write, res, value, false);
+		this.tmpDb.put(res, value);
 	}
 	
 	/**
@@ -91,7 +92,11 @@ public class DataManager {
 	 */
 	public String read(int transacId, String res) {
 		logTransaction(transacId, OpCode.Read, res, null, true);
-		return this.db.get(res);
+		return this.tmpDb.get(res);
+	}
+	
+	public String roRead(int transacId, TimeStamp timestamp) {
+		return null;
 	}
 	
 	/**
@@ -160,10 +165,20 @@ public class DataManager {
 		return true;
 	}
 	
+	/**
+	 * take a snapshot with current timestamp
+	 * @param timestamp
+	 */
 	public void snapshot(String timestamp) {
 		Set<Map.Entry<String, String>> entries = db.entrySet();
+		TimeStamp now = new TimeStamp();
 		for(Map.Entry<String, String> entry : entries) {
-			new TimeStamp();
+			String resource = entry.getValue();
+			ArrayList<SnapShotEnty> list = snapshots.get(resource);
+			list.add(snapshotGen(resource, now));
+			if(list.size() > 20) {
+				list.remove(0);
+			}
 		}
 	}
 	
@@ -173,7 +188,7 @@ public class DataManager {
 	 * @param String timestamp
 	 * @return String[] a snapshot of resource
 	 */
-	private SnapShotEnty snapshotGen(String resource, String timestamp) {
+	private SnapShotEnty snapshotGen(String resource, TimeStamp timestamp) {
 		return new SnapShotEnty(db.get(resource), timestamp);
 	} 
 }

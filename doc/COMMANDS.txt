@@ -35,8 +35,9 @@ successful:
 EXE_RESP 1
 
 conflict:
-EXE_RESP 0 {10} 2
-EXE_RESP 0 {10,1,3} 2 //10,1,3 all hold read lock on resource, 2 tried to write so conflict
+EXE_RESP 0 [10] 2
+EXE_RESP 0 [10, 1, 3] 2 //10,1,3 all hold read lock on resource, 2 tried to write so conflict
+						//notice: should split with ", " not just ","
 
 read:
 EXE_RESP X3:22

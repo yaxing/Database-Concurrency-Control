@@ -1,6 +1,8 @@
 
 package nyu.ads.conctrl.site;
 
+import java.util.ArrayList;
+
 import nyu.ads.conctrl.entity.*;
 
 import nyu.ads.conctrl.site.entity.*;
@@ -123,6 +125,7 @@ public class Site{
 	}
 	
 	public String op_instr(String[] msg) {
+		
 		return null;
 	}
 	
@@ -152,8 +155,12 @@ public class Site{
 	 * test
 	 */
 	public static void main(String[] args) {
-		Site s = new Site();
-		s.setBuffer("INSTR 1 0 W X1 19");
-		s.process();
+		ArrayList<String> n = new ArrayList<String>();
+		n.add("lalala");
+		System.out.println(n.toString());
+//		
+//		Site s = new Site();
+//		s.setBuffer("INSTR 1 0 W X1 19");
+//		s.process();
 	}
 }
