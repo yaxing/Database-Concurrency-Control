@@ -3,7 +3,7 @@ package nyu.ads.conctrl.site;
 
 import java.util.*;
 
-import nyu.ads.conctrl.entity.OpCode;
+import nyu.ads.conctrl.entity.*;
 import nyu.ads.conctrl.site.entity.*;
 /**
  * DataManager class
@@ -16,11 +16,11 @@ import nyu.ads.conctrl.site.entity.*;
  */
 public class DataManager {
 
-	public HashMap<String, String> db;//stable storage, actual db on this server, resource=>value
-	public HashMap<String, String> tmpDb; //tmp storage, containing un-committed data
-	public String[] uniqueRes; // used when recover, to lock 
+	private HashMap<String, String> db;//stable storage, actual db on this server, resource=>value
+	private HashMap<String, String> tmpDb; //tmp storage, containing un-committed data
+	private String[] uniqueRes; // used when recover, to lock 
 	
-	public ArrayList<TransactionLogItemEnty> transactionLog; // transaction log: String[5] : 
+	private ArrayList<TransactionLogItemEnty> transactionLog; // transaction log: String[5] : 
 										// [0]: Transactin No
 										// [1]: op (W/R)
 										// [2]: source index
@@ -28,6 +28,9 @@ public class DataManager {
 										// [4]: operation result(successful or not): 1/0
 	
 	private ArrayList<Integer> commitLog; // commit log: commited transactions
+	
+	private HashMap<String, ArrayList<SnapShotEnty>> snapshots; //resource=>snapshots
+												// snapshots: String[2] = (value, timestamp);
 	
 	DataManager() {
 		this.db = new HashMap<String, String>();
@@ -156,4 +159,21 @@ public class DataManager {
 		
 		return true;
 	}
+	
+	public void snapshot(String timestamp) {
+		Set<Map.Entry<String, String>> entries = db.entrySet();
+		for(Map.Entry<String, String> entry : entries) {
+			new TimeStamp();
+		}
+	}
+	
+	/**
+	 * 
+	 * @param String resource
+	 * @param String timestamp
+	 * @return String[] a snapshot of resource
+	 */
+	private SnapShotEnty snapshotGen(String resource, String timestamp) {
+		return new SnapShotEnty(db.get(resource), timestamp);
+	} 
 }

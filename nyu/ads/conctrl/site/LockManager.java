@@ -10,6 +10,8 @@ import nyu.ads.conctrl.entity.*;
  */
 public class LockManager {
 	
+	public HashMap<String, HashMap<Integer, String>> lockss;
+	
 	public HashMap<String, Integer> locks;	// current locks: "resource"=>"transaction id"
 	
 	public HashMap<String, Integer> recoverLocks; // replicated resources that are locked from reading when site recover
