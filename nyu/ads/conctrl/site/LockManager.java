@@ -65,15 +65,15 @@ public class LockManager {
 	 * unlock all resources locked by a transaction T
 	 * @param int transacId
 	 */
-	public void unlockTransac(int transacId) {
-		Set<Map.Entry<String, Integer>> entries = locks.entrySet();
-		for(Map.Entry<String, Integer> entry : entries) {
-			int id = entry.getValue();
-			if(id == transacId) {
-				locks.remove(entry.getKey());
-			}
-		}
-	}
+//	public void unlockTransac(int transacId) {
+//		Set<Map.Entry<String, Integer>> entries = locks.entrySet();
+//		for(Map.Entry<String, Integer> entry : entries) {
+//			int id = entry.getValue();
+//			if(id == transacId) {
+//				locks.remove(entry.getKey());
+//			}
+//		}
+//	}
 	
 	/**
 	 * lock certain resource for reading
