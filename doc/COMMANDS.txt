@@ -31,19 +31,23 @@ INIT X1:19 X2:12:UNIQ X6:15
 
 Site => TM
 1. execution response EXE_RESP 1/0/-1 [{T_NAME_HOLDER,T_NAME_HOLDER...}] [T_NAME_REQ] [V_NAME:V_VALUE]
-successful:
-EXE_RESP 1
 
-conflict:
-EXE_RESP 0 {10} 2
-EXE_RESP 0 {10,1,6} 2 
+Successful:
+ EXE_RESP 1
 
+Failed:
+ a. Conflict: 
+       EXE_RESP 0 {10} 2
+       EXE_RESP 0 {10,1,6} 2 
 
-recover lock for read:
-EXE_RESP -1
+ b. recover lock for read:
+       EXE_RESP 0
+       
+ c. Site failure
+       EXE_RESP -1
 
-read:
-EXE_RESP X3:22
+Read:
+ EXE_RESP X3:22
 
 2. commit response COMMIT_RESP 1/0
 
