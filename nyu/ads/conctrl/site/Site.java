@@ -133,6 +133,12 @@ public class Site{
 		return null;
 	}
 	
+	/**
+	 * write log to db,
+	 * clear recover locks
+	 * @param trasactionId
+	 * @return
+	 */
 	public String op_commit(int trasactionId) {
 		return null;
 	}

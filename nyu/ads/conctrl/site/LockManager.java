@@ -3,6 +3,8 @@ package nyu.ads.conctrl.site;
 
 import java.util.*;
 import nyu.ads.conctrl.entity.*;
+import nyu.ads.conctrl.site.entity.*;
+
 /**
  * Class LockManager
  * 
@@ -10,31 +12,51 @@ import nyu.ads.conctrl.entity.*;
  */
 public class LockManager {
 	
-	private HashMap<String, HashMap<Integer, Integer>> locks; // lock table
-													//"resource"=>HashMap<transactionID, lockType>
-													//(1: lock exclusive, 0: shared)
-	
-	private HashMap<String, Integer> recoverLocks; // replicated resources that are locked from reading when site recover
-												  // delete when certain resource is committed written
-												  // locked as -1
+	/**
+	 * lock Table
+	 * "resource"=>ArrayList<LockEnty>
+	 * @see LockEnty
+	 */
+	private HashMap<String, ArrayList<LockEnty>> locks; 
+
+	/**
+	 * replicated resources that are locked from reading when site recover
+	 * delete when certain resource is committed written
+	 * locked as -1
+	 */
+	private HashMap<String, Integer> recoverLocks; 
 	
 	public LockManager() {
-		locks = new HashMap<String, HashMap<Integer, Integer>>(); 
+		locks = new HashMap<String, ArrayList<LockEnty>>(); 
 		recoverLocks = new HashMap<String, Integer>();
 	}
 	
+	/**
+	 * generates conflicting information and return
+	 * @param String res
+	 * @param int transacId
+	 * @return
+	 */
 	private String conflictRespGen(String res, int transacId) {
 		StringBuilder buffer = new StringBuilder();
 		buffer.append(InstrCode.EXE_RESP + " 0 ");
-		HashMap<Integer, Integer> lockInfo = locks.get(res);
-		Set<Map.Entry<Integer, Integer>> entries = lockInfo.entrySet();
+		ArrayList<LockEnty> lockInfo = locks.get(res);
 		buffer.append("{");
 		int counter = 0;
-		for(Map.Entry<Integer, Integer> entry : entries) {
-			buffer.append(entry.getKey());
+		for(; counter < lockInfo.size();) {
+			LockEnty lock = lockInfo.get(counter);
+			buffer.append(lock.transacId);
 			counter ++;
-			if(counter < entries.size()) {
-				buffer.append(",");
+			if(counter < lockInfo.size()) {
+				for(; counter < lockInfo.size();) {
+					if(lock.transacId == lockInfo.get(counter).transacId) {
+						counter ++;
+					}
+					else {
+						buffer.append(",");
+						break;
+					}
+				}
 			}
 		}
 		buffer.append("} ");
@@ -43,13 +65,36 @@ public class LockManager {
 	}
 	
 	/**
-	 * first time lock a resource
+	 * first time lock a resource,
+	 * add resource and lock information into lock table
+	 * @param int transacId
+	 * @param String res
+	 * @param boolean isExclusive
 	 * @return void
 	 */
-	private void newLock(int transacId, String res, boolean isExclusive) {
-		HashMap<Integer, Integer> lockInfo = new HashMap<Integer, Integer>();
-		lockInfo.put(transacId, isExclusive ? 1 : 0);
-		locks.put(res, lockInfo);
+	private void newLock(int transacId, String res, LockType lockType) {
+		if(locks.containsKey(res)) {
+			ArrayList<LockEnty> lockInfo = locks.get(res);
+			int count = 0;
+			for(LockEnty lock : lockInfo) {
+				if(lock.transacId == transacId && lock.type == lockType) {
+					return;
+				}
+				else if(lock.transacId > transacId) {
+					lockInfo.add(count, new LockEnty(transacId, lockType));
+					return;
+				}
+				count ++;
+			}
+			if(count >= lockInfo.size()) {
+				lockInfo.add(new LockEnty(transacId, lockType));
+			}
+		}
+		else {
+			ArrayList<LockEnty> lockInfo = new ArrayList<LockEnty>();
+			lockInfo.add(new LockEnty(transacId, lockType));
+			locks.put(res, lockInfo);
+		}
 		return;
 	}
 	
@@ -59,39 +104,37 @@ public class LockManager {
 	 * @param res
 	 * @return String NULL: lock retrieved; "conflict: T1, T2": T1 is conflict with T2, T2 holds the lock
 	 */
-	public String lock(int transacId, String res, boolean isExclusive) {
+	public String lock(int transacId, String res, LockType requestLockType) {
 		//if there're locks on this resource
 		if(locks.containsKey(res)) {
-			int lockType = 0;
-			HashMap<Integer, Integer> lockInfo = locks.get(res);
-			Set<Map.Entry<Integer, Integer>> entries = lockInfo.entrySet();
-			for(Map.Entry<Integer, Integer> entry : entries) {
-				lockType = entry.getValue();
-				break;
-			}										 
-			if(lockInfo.containsKey(transacId)) {
-				if((lockInfo.get(transacId) == 0 && lockInfo.size() == 1) || lockInfo.get(transacId) == 1) {
-					lockInfo.put(transacId, isExclusive ? 1:0);
+			
+			ArrayList<LockEnty> lockInfo = locks.get(res);
+			LockType curLockType = findCurrentLockType(res);
+			
+			if(isLockedByT(res, transacId)) {
+				if(curLockType == LockType.READ && lockInfo.size() == 1 || curLockType == LockType.WRITE) {
+					newLock(transacId, res, requestLockType);
 					return null;
 				}
-				else if(!isExclusive){
+				else if(lockInfo.size() > 1 && requestLockType == LockType.READ) {
 					return null;
 				}
 				else {
 					return conflictRespGen(res, transacId);
 				}
 			}
-			else if(lockType == 1 || isExclusive) {
+			else if(curLockType == LockType.WRITE || requestLockType == LockType.WRITE) {
 				return conflictRespGen(res, transacId);
 			}
 			else {
-				lockInfo.put(transacId, 0);
+				newLock(transacId, res, requestLockType);
 				return null;
 			}
 		}
+		//if lock doesn't exist
 		else if(recoverLocks.containsKey(res)) {
-			if(isExclusive) {
-				newLock(transacId, res, isExclusive);
+			if(requestLockType == LockType.WRITE) {
+				newLock(transacId, res, requestLockType);
 				return null;
 			}
 			else {
@@ -99,9 +142,41 @@ public class LockManager {
 			}
 		}
 		else {
-			newLock(transacId, res, isExclusive);
+			newLock(transacId, res, requestLockType);
 			return null;
 		}
+	}
+	
+	/**
+	 * judge whether a resource is locked by a certain transaction
+	 * @param String res   resource name
+	 * @param int transacId transaction id
+	 * @return boolean
+	 */
+	private boolean isLockedByT(String res, int transacId) {
+		ArrayList<LockEnty> lockInfo = locks.get(res);
+		for(LockEnty curLock : lockInfo) {
+			if(curLock.transacId == transacId) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * traverse lock list for current resource (lock exist):
+	 * if there are multiple read locks from different transactions, then current lock type is READ
+	 * if there is one write lock, then current lock type is write 
+	 * @return LockType
+	 */
+	private LockType findCurrentLockType(String res) {
+		ArrayList<LockEnty> lockInfo = locks.get(res); 
+		for(LockEnty lock : lockInfo) {
+			if(lock.type == LockType.WRITE) {
+				return LockType.WRITE;
+			}
+		}
+		return LockType.READ;
 	}
 	
 	/**
@@ -109,12 +184,20 @@ public class LockManager {
 	 * @param int transacId
 	 */
 	public void unlockTransac(int transacId) {
-		Set<Map.Entry<String, HashMap<Integer, Integer>>> entries = locks.entrySet();
-		for(Map.Entry<String, HashMap<Integer, Integer>> entry : entries) {
-			HashMap<Integer, Integer> lockInfo = entry.getValue();
-			lockInfo.remove(transacId);
-			if(lockInfo.isEmpty()) {
-				locks.remove(entry.getKey());
+		Set<Map.Entry<String, ArrayList<LockEnty>>> entries = locks.entrySet();
+		for(Map.Entry<String, ArrayList<LockEnty>> entry : entries) {
+			ArrayList<LockEnty> lockInfo = entry.getValue();
+			for(LockEnty lock : lockInfo) {
+				if(lock.transacId == transacId) {
+					lockInfo.remove(lock);
+					if(lockInfo.isEmpty()) {
+						locks.remove(entry.getKey());
+						break;
+					}
+				}
+			}
+			if(locks.isEmpty()) {
+				break;
 			}
 		}
 	}
@@ -142,13 +225,28 @@ public class LockManager {
 	 */
 	public static void main(String[] args) {
 		LockManager lm = new LockManager();
-		System.out.println(lm.lock(0, "X1", false));
-		System.out.println(lm.lock(1, "X1", false));
-		System.out.println(lm.lock(0, "X1", true));
-		System.out.println(lm.locks.toString());
+		//System.out.println(lm.lock(2, "X1", LockType.WRITE));
+		System.out.println(lm.lock(2, "X1", LockType.READ));
+		System.out.println(lm.lock(0, "X1", LockType.READ));
+		System.out.println(lm.lock(1, "X1", LockType.WRITE));
+		lm.testOutputLocks();
 		lm.unlockTransac(0);
-		System.out.println(lm.locks.toString());
-		lm.unlockTransac(1);
-		System.out.println(lm.locks.toString());
+		lm.testOutputLocks();
+		lm.unlockTransac(2);
+		lm.testOutputLocks();
+	}
+	
+	private void testOutputLocks() {
+		System.out.println("locks:{");
+		Set<Map.Entry<String, ArrayList<LockEnty>>> entries = locks.entrySet();
+		for(Map.Entry<String, ArrayList<LockEnty>> entry : entries) {
+			System.out.print(entry.getKey() + ": { ");
+			ArrayList<LockEnty> lockInfo = entry.getValue();
+			for(LockEnty lock : lockInfo) {
+				System.out.print(lock.transacId + "=" + lock.type + ",");
+			}
+			System.out.println("}");
+		}
+		System.out.println("}");
 	}
 }

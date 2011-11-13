@@ -60,10 +60,11 @@ public class DataManager {
 	
 	/**
 	 * add new resource when initiating site
-	 * @param resFull
+	 * @param resName
+	 * @param value
 	 */
-	public void newRes(String resFull) {
-		this.db.put(resFull, null);
+	public void newRes(String resName, String value) {
+		this.db.put(resName, value);
 	}
 	
 	/**
