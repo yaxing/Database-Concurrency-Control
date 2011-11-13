@@ -236,6 +236,9 @@ public class LockManager {
 		lm.testOutputLocks();
 	}
 	
+	/**
+	 * test output
+	 */
 	private void testOutputLocks() {
 		System.out.println("locks:{");
 		Set<Map.Entry<String, ArrayList<LockEnty>>> entries = locks.entrySet();
