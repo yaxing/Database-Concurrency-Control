@@ -46,14 +46,15 @@ public class TransactionManager {
 		inputScanner.useDelimiter(System.getProperty("line.separator"));
 		String inputLine = "";
 		
-		transManager.initSites();
+		//transManager.initSites();
+
+		// get line of user input
+		inputLine = inputScanner.next();
 		
-		do {
-			// set the new current timestamp
+		while(!inputLine.equalsIgnoreCase("exit")) {
+			// set the new current time stamp
 			transManager.currentTimestamp = new Date();
 			
-			// get line of user input
-			inputLine = inputScanner.next();
 			
 			// parse input into instruction list
 			List<ParsedInstrEnty> instructionList = transManager.parse(inputLine);
@@ -65,10 +66,13 @@ public class TransactionManager {
 			
 			for (ParsedInstrEnty i : instructionList)
 			{
-				// process each instruction sequencially
-				transManager.process(i);
+				// process each instruction sequentially
+				//transManager.process(i);
 			}			
-		} while (!inputLine.equalsIgnoreCase("exit")); 
+			
+			// get the next line of user input
+			inputLine = inputScanner.next();
+		}  
 	}
 
 	/**
@@ -77,20 +81,22 @@ public class TransactionManager {
 	public void initSites() {
 		// init sites
 		Site s = new Site();
-		String[] variables = {"X1", "X2", "X4", "X6"};
-		String[] uniqueVariables = {"X1"};
-		s.initResources(variables, uniqueVariables);
+		String[] variables = {"X1", "X2", "X6"};
+		String[] uniqueVariables = {"X2"};
+		s.setBuffer("INIT X1:19 X2:12:UNIQ X6:15");
+		s.process();
 		siteList.add(s);
 		
 		addVariableLocations(variables, 1);
 	
 		s = new Site();
-		String[] variables2 = {"X4", "X2", "X6", "X7"};
-		String[] uniqueVariables2= {"X7"};
-		s.initResources(variables2, uniqueVariables2);
+		String[] variables2 = {"X1", "X3", "X6"};
+		String[] uniqueVariables2= {"X3"};
+		s.setBuffer("INIT X1:19 X3:12:UNIQ X6:15");
+		s.process();
 		siteList.add(s);
 		
-		addVariableLocations(variables, 2);
+		addVariableLocations(variables2, 2);
 	}
 	
 	public void addVariableLocations(String[] variables, int site) {
@@ -113,7 +119,7 @@ public class TransactionManager {
 	 */
 	public void process(ParsedInstrEnty i) {
 		switch(i.opcode) {
-			case Begin:
+			case BEGIN:
 				// update trans table
 				Transaction t = new Transaction();
 				t.transID = i.transactionId;
@@ -123,7 +129,7 @@ public class TransactionManager {
 				
 				transTable.addTransaction(t);
 				break;
-			case BeginRO:
+			case BEGINRO:
 				// update trans table
 				Transaction tro = new Transaction();
 				tro.transID = i.transactionId;
@@ -133,7 +139,7 @@ public class TransactionManager {
 				
 				transTable.addTransaction(tro);
 				break;
-			case End:
+			case END:
 				// Two-phase commit:
 				// send message to all sites, get receipts
 				
@@ -141,19 +147,19 @@ public class TransactionManager {
 				
 				// update trans table
 				break;
-			case Dump:
+			case DUMP:
 				// send message to applicable sites
 				siteList.get(0).query();
 				break;
-			case Fail:
+			case FAIL:
 				// send message to applicable site
-				siteList.get(0).fail();
+				sendToSite(i.site, "FAIL");
 				break;
-			case Recover:
+			case RECOVER:
 				// send message to applicable site
-				siteList.get(0).recover();
-			case Read:
-			case Write:
+				sendToSite(i.site, "RECOVER");
+			case R:
+			case W:
 				// send message to applicable sites
 				// recieve receipt
 				int site = varLocations.get(i.resource).indexOf(0);
@@ -223,11 +229,57 @@ public class TransactionManager {
 	 * @return the list of instructions
 	 */
 	public List<ParsedInstrEnty> parse(String input) {
+		String msgs[] = input.split(";");
+		
 		List<ParsedInstrEnty> instrList = new ArrayList<ParsedInstrEnty>();
+		for(String m : msgs){
 		
-		instrList.add(new ParsedInstrEnty(OpCode.Begin, 1, null, null, "begin(T1)"));
-		instrList.add(new ParsedInstrEnty(OpCode.Begin, 2, null, null, "begin(T2)"));
+			String[] msg = m.trim().split("\\(|,|\\)");
+			
+			// clean whitespace, make each token upper case
+			for(int i = 0; i < msg.length; i++) {
+				msg[i] = msg[i].trim().toUpperCase();
+			}
+			
+			OpCode op = OpCode.valueOf(msg[0]);
+			ParsedInstrEnty pie = new ParsedInstrEnty();
+			pie.opcode = op;
+			pie.originalInstruction = m;
+			
+			switch(op) {
+			case BEGIN:
+			case BEGINRO:
+			case END:
+				pie.transactionId = new Integer(msg[1].substring(1));
+				break;
+			case R:
+				pie.transactionId = new Integer(msg[1].substring(1));
+				pie.resource = msg[2];
+				break;
+			case W:
+				pie.transactionId = new Integer(msg[1].substring(1));
+				pie.resource = msg[2];
+				pie.value = msg[3];
+				break;
+			case FAIL:
+			case RECOVER:
+				pie.site = new Integer(msg[1]);
+				break;
+			case DUMP:
+				if (msg.length == 1) { break;}
+				else {
+					if(msg[1].startsWith("X")) {
+						pie.resource = msg[1];
+					}
+					else {
+						pie.site = new Integer(msg[1]);
+					}
+				}
+			}
+			instrList.add(pie);
+		}
 		
-		return null;
+		
+		return instrList;
 	}
 }

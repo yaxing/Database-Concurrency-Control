@@ -77,7 +77,7 @@ public class DataManager {
 	 * @return 
 	 */
 	public void write(int transacId, String res, String value) {
-		logTransaction(transacId, OpCode.Write, res, value, false);
+		logTransaction(transacId, OpCode.W, res, value, false);
 	}
 	
 	/**
@@ -87,7 +87,7 @@ public class DataManager {
 	 * @return String read value
 	 */
 	public String read(int transacId, String res) {
-		logTransaction(transacId, OpCode.Read, res, null, true);
+		logTransaction(transacId, OpCode.R, res, null, true);
 		return this.db.get(res);
 	}
 	
@@ -108,7 +108,7 @@ public class DataManager {
 		
 		int count = 0;
 		for(TransactionLogItemEnty item : transactionLog) {
-			if(item.operation.equals(OpCode.Write)) {
+			if(item.operation.equals(OpCode.W)) {
 				if(this.db.containsKey(item.resource)) {
 					this.db.put(item.resource, item.value);
 				}

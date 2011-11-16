@@ -11,6 +11,7 @@ public class ParsedInstrEnty {
 	public String resource;
 	public String value;
 	public String originalInstruction;
+	public int site;
 	
 	/**
 	 * Constructor with parameters.
@@ -20,12 +21,13 @@ public class ParsedInstrEnty {
 	 * @param value
 	 * @param originalInstruction
 	 */
-	public ParsedInstrEnty(OpCode opcode, int transactionId, String resource, String value, String originalInstruction) {
+	public ParsedInstrEnty(OpCode opcode, int transactionId, String resource, String value, String originalInstruction, int site) {
 		this.opcode = opcode;
 		this.transactionId = transactionId;
 		this.resource = resource;
 		this.value = value;
 		this.originalInstruction = originalInstruction;
+		this.site = site;
 	}
 	
 	/**

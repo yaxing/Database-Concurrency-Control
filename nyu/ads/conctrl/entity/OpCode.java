@@ -6,12 +6,12 @@ package nyu.ads.conctrl.entity;
  * @author Yaxing
  */
 public enum OpCode {
-	Begin,
-	BeginRO,
-	End,
-	Write,
-	Read,
-	Dump,
-	Fail,
-	Recover
+	BEGIN,
+	BEGINRO,
+	END,
+	W,
+	R,
+	DUMP,
+	FAIL,
+	RECOVER
 }
