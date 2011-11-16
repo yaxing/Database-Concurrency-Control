@@ -102,7 +102,7 @@ public class LockManager {
 	 * request a lock on res for transaction with transacId
 	 * @param transacId
 	 * @param res
-	 * @return String NULL: lock retrieved; "conflict: T1, T2": T1 is conflict with T2, T2 holds the lock
+	 * @return String NULL: lock retrieved; "{T1, T2} T3": T3 is conflict with T1, T2 who hold lock
 	 */
 	public String lock(int transacId, String res, LockType requestLockType) {
 		//if there're locks on this resource

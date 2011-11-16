@@ -14,13 +14,22 @@ import nyu.ads.conctrl.site.entity.*;
  */
 public class Site{
 	
-	public String buffer;// message buffer, containing instructions for different transactions
+	private String buffer;// message buffer, containing instructions for different transactions
 	
-	public LockManager lockMng;// lock manager obj, to handle locks in a certain site
+	private LockManager lockMng;// lock manager obj, to handle locks in a certain site
 	
-	public DataManager dataMng;// data manager obj, to manage all data in this site, including r/w operations
+	private DataManager dataMng;// data manager obj, to manage all data in this site, including r/w operations
 	
-	public int status = 1; //0: failed, 1: running
+	private int status = 1; //0: failed, 1: running
+	
+	private ArrayList<Integer> commitLog; //committed transaction id list, sorted based on timestamp
+	
+	public Site() {
+		buffer = "";
+		lockMng = new LockManager();
+		dataMng = new DataManager();
+		commitLog = new ArrayList<Integer>();
+	}
 	
 	/**
 	 * site processor,
@@ -67,8 +76,7 @@ public class Site{
 		default:
 			break;
 		}
-		System.out.println(result);
-		return null;
+		return result;
 	}
 	
 	/**
@@ -83,11 +91,19 @@ public class Site{
 	/**
 	 * recover this site
 	 * change status
-	 * recover data through data manager
+	 * recover transactions after server failed and restarted
+	 * recover from transaction log and commit log, recover only committed transactions
+	 * require recover lock for all replicated resources
 	 */
 	public void op_recover() {
 		this.status = 1;
-		this.dataMng.recover();
+		for(Integer transacId : commitLog) {
+			this.dataMng.commitT(transacId);
+		}
+		String[] uniq = dataMng.getUniqRes();
+		for(String res : uniq) {
+			lockMng.recoverLock(res);
+		}
 	}
 	
 	public int getStatus() {
@@ -120,27 +136,75 @@ public class Site{
 	 * resList containing opcode INIT, so res list starts from resList[1]
 	 * @param resList
 	 */
-	public void op_init_res(String[] resList) {
-		
+	public void op_init_res(String[] msg) {
+		ArrayList<String> uniq = new ArrayList<String>();
+		for(int i = 1; i < msg.length; i ++) {
+			String[] tmp = msg[i].split(":");
+			if(tmp.length == 3 && tmp[2].equals("UNIQ")) {
+				uniq.add(tmp[0]);
+			}
+			dataMng.newRes(tmp[0], tmp[1]);
+		}
+		String[] q = new String[uniq.size()];
+		dataMng.setUniqRes(uniq.toArray(q));
 	}
 	
+	
+	/**
+	 * w/r/ro operation handler
+	 * @param msg
+	 * @return
+	 */
 	public String op_instr(String[] msg) {
-		
-		return null;
+		if(msg.length < 5) {
+			return "EXEE_RESP 0 UNKNOWN_MSG";
+		}
+		int transacId = Integer.parseInt(msg[1]);
+		String res = msg[4];
+		if(msg[3].equals("W")) {
+			if(msg.length < 6) {
+				return "EXEE_RESP 0 UNKNOWN_MSG";
+			}
+			String resp = lockMng.lock(transacId, res, LockType.WRITE);
+			if(resp == null) {
+				dataMng.write(transacId, res, msg[5]);
+				return "EXE_RESP 1";
+			}
+			else {
+				return resp;
+			}
+		}
+		else if(msg[3].equals("R")) {
+			String resp = lockMng.lock(transacId, res, LockType.READ);
+			if(resp == null) {
+				return res + ":" + dataMng.read(transacId, res);
+			}
+			else {
+				return resp;
+			}
+		}
+		else if(msg[3].equals("RO")) {
+			return res + ":" + dataMng.roRead(transacId, (TimeStamp)TimeStamp.valueOf(msg[2]));
+		}
+		return "EXEE_RESP 0 UNKNOWN_OPERATION";
 	}
 	
 	public String op_commit_query(int transactionId) {
+		
 		return null;
 	}
 	
 	/**
 	 * write log to db,
 	 * clear recover locks
+	 * write commit log
 	 * @param trasactionId
 	 * @return
 	 */
-	public String op_commit(int trasactionId) {
-		return null;
+	public String op_commit(int transacId) {
+		dataMng.commitT(transacId);
+		lockMng.unlockTransac(transacId);
+		return "COMMIT_RESP 1";
 	}
 	
 	/**
@@ -154,19 +218,40 @@ public class Site{
 	}
 	
 	public String op_dump(String resName) {
-		
-		return null;
+		if(resName == null || resName.length() == 0) {
+			return dataMng.dump();
+		}
+		return dataMng.dump(resName);
 	}
 	/*
 	 * test
 	 */
 	public static void main(String[] args) {
-		ArrayList<String> n = new ArrayList<String>();
-		n.add("lalala");
-		System.out.println(n.toString());
-//		
-//		Site s = new Site();
-//		s.setBuffer("INSTR 1 0 W X1 19");
-//		s.process();
+		Site site = new Site();
+		site.setBuffer("INIT X1:19 X2:12:UNIQ X6:15");
+		site.process();
+		site.setBuffer("DUMP");
+		System.out.println(site.process());
+//		String[] uniq = site.dataMng.getUniqRes();
+//		for(String s : uniq) {
+//			System.out.print(s + " ");
+//		}
+		site.setBuffer("INSTR 1 02366662 W X1 6");
+		System.out.println(site.process());
+		
+		site.setBuffer("DUMP");
+		System.out.println(site.process());
+		
+		site.setBuffer("INSTR 1 02366662 R X1");
+		System.out.println(site.process());
+		
+		site.setBuffer("INSTR 2 02366662 R X1 6");
+		System.out.println(site.process());
+		
+		site.setBuffer("COMMIT 1");
+		System.out.println(site.process());
+		
+		site.setBuffer("DUMP");
+		System.out.println(site.process());
 	}
 }

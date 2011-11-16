@@ -17,45 +17,43 @@ import nyu.ads.conctrl.site.entity.*;
 public class DataManager {
 
 	private HashMap<String, String> db;//stable storage, actual db on this server, resource=>value
-	private HashMap<String, String> tmpDb; //tmp storage, containing un-committed data
+	
 	private String[] uniqueRes; // used when recover, to lock 
 	
-	private ArrayList<TransactionLogItemEnty> transactionLog; // transaction log: String[5] : 
-										// [0]: Transactin No
-										// [1]: op (W/R)
-										// [2]: source index
-										// [3]: operation value
-										// [4]: operation result(successful or not): 1/0
 	
-	private ArrayList<Integer> commitLog; // commit log: commited transactions
+	/**
+	 * transaction log
+	 * logging all updating operations of each transaction.
+	 * transaction id is key
+	 * 
+	 * used before commit and when recovery
+	 * 
+	 * @see TransactionLogItemEnty
+	 */
+	private HashMap<Integer, ArrayList<TransactionLogItemEnty>> transactionLog; 
 	
 	private HashMap<String, ArrayList<SnapShotEnty>> snapshots; //resource=>snapshots
 												// snapshots: String[2] = (value, timestamp);
 	
 	DataManager() {
 		this.db = new HashMap<String, String>();
-		this.transactionLog = new ArrayList<TransactionLogItemEnty>();
-		this.commitLog = new ArrayList<Integer>();
+		this.transactionLog = new HashMap<Integer, ArrayList<TransactionLogItemEnty>>();
 	}
 	
 	/**
 	 * write transaction log
 	 * @param transacId
-	 * @param op
 	 * @param resource
 	 * @param value
-	 * @param abort
 	 */
-	private void logTransaction(int transacId, OpCode op, String resource, String value, boolean abort) {
-		transactionLog.add(new TransactionLogItemEnty(transacId, op, resource, value, abort));
-	}
-	
-	/**
-	 * write commit log
-	 * @param transaction id
-	 */
-	private void logCommit(int transactionId) {
-		this.commitLog.add(transactionId);
+	private void logTransaction(int transacId, String resource, String value) {
+		ArrayList<TransactionLogItemEnty> loginfo = null;
+		if(!transactionLog.containsKey(transacId)) {
+			loginfo = new ArrayList<TransactionLogItemEnty>();
+			transactionLog.put(transacId, loginfo);
+		}
+		loginfo = transactionLog.get(transacId);
+		loginfo.add(new TransactionLogItemEnty(resource, value));
 	}
 	
 	/**
@@ -75,29 +73,51 @@ public class DataManager {
 		this.uniqueRes = uniqueRes;
 	}
 	
+	public String[] getUniqRes() {
+		return this.uniqueRes;
+	}
+	
 	/**
 	 * write resource, write into log
 	 * @param resId
 	 * @return 
 	 */
 	public void write(int transacId, String res, String value) {
-		logTransaction(transacId, OpCode.Write, res, value, false);
-		this.tmpDb.put(res, value);
+		logTransaction(transacId, res, value);
 	}
 	
 	/**
 	 * read resource, return read value
+	 * 2 situation (use R(T1, X1) as an example):
+	 * 1) T1 wrote X1 before, T1 holds write lock of X1, then read from log
+	 * 2) T1 never write X1 before, then read from db
 	 * @param transacId
 	 * @param res
 	 * @return String read value
 	 */
 	public String read(int transacId, String res) {
-		logTransaction(transacId, OpCode.Read, res, null, true);
-		return this.tmpDb.get(res);
+		ArrayList<TransactionLogItemEnty> history = transactionLog.get(transacId); 
+		if(history != null && history.size() >= 1) {
+			for(int i = history.size() - 1; i >= 0; i --) {
+				if(history.get(i).resource.equals(res)) {
+					return history.get(i).value;
+				}
+			}
+		}
+		return db.get(res);
 	}
 	
 	public String roRead(int transacId, TimeStamp timestamp) {
 		return null;
+	}
+	
+	/**
+	 * abort transaction, 
+	 * clean write log page of this certain transaction
+	 * @param transacId
+	 */
+	public void abortT(int transacId) {
+		transactionLog.remove(transacId);
 	}
 	
 	/**
@@ -109,32 +129,13 @@ public class DataManager {
 	 * @return
 	 */
 	public boolean commitT(int transacId) {
-		/*
-		 * write db
-		 * write commit Log
-		 * clear corresponding recovery locks, if exist  
-		 */
-		
-		int count = 0;
-		for(TransactionLogItemEnty item : transactionLog) {
-			if(item.operation.equals(OpCode.Write)) {
-				if(this.db.containsKey(item.resource)) {
-					this.db.put(item.resource, item.value);
-				}
-			}
+		ArrayList<TransactionLogItemEnty> writeLog = transactionLog.get(transacId);
+		if(writeLog == null || writeLog.size() == 0) {
+			return true;
 		}
-		return true;
-	}
-	/**
-	 * recover transactions after server failed and restarted
-	 * recover from transaction log and commit log, recover only committed transactions
-	 * require recover lock for all replicated resources
-	 * @return boolean
-	 */
-	public boolean recover() {
-		/*
-		 * 
-		 */
+		for(TransactionLogItemEnty log : writeLog) {
+			db.put(log.resource, log.value);
+		}
 		return true;
 	}
 	
@@ -143,7 +144,7 @@ public class DataManager {
 	 * @return String a structured String that can be parsed by TM
 	 */
 	public String dump() {
-		return null;
+		return db.toString();
 	}
 	
 	/**
@@ -151,13 +152,13 @@ public class DataManager {
 	 * @param traget resource name
 	 * @return String a structured String that can be parsed by TM
 	 */
-	public String dump(String traget) {
-		return null;
+	public String dump(String target) {
+		return target + "=" + db.get(target);
 	}
 	
 	/**
 	 * prepare to commit a certain transaction
-	 * return true of false to TM
+	 * return true or false to TM
 	 * @param transacId
 	 * @return
 	 */
@@ -192,4 +193,55 @@ public class DataManager {
 	private SnapShotEnty snapshotGen(String resource, TimeStamp timestamp) {
 		return new SnapShotEnty(db.get(resource), timestamp);
 	} 
+	
+	public static void main(String[] args) {
+		DataManager dm = new DataManager();
+		String[] uniq = new String[10];
+		int j = 0;
+		for(int i = 0; i < 10; i ++) {
+			dm.newRes("X" + i, Integer.toString(i));
+			if(i % 2 == 1) {
+				uniq[j ++] = Integer.toString(i);
+			}
+		}
+		dm.setUniqRes(uniq);
+		System.out.println(dm.dump());
+		for(String s : dm.uniqueRes) {
+			if(s != null && s.length() > 0) {
+				System.out.print(s + ",");
+			}
+		}
+		System.out.println();
+		
+		dm.write(1, "X2", "6");
+		dm.write(1, "X3", "6");
+		dm.write(1, "X5", "6");
+		dm.write(2, "X6", "66");
+		System.out.println(dm.read(1, "X6"));
+		//expected: 6
+		System.out.println(dm.dump());
+		//expected: {X0=0, X1=1, X2=2, X3=3, X4=4, X5=5, X6=6, X7=7, X9=9, X8=8}
+		dm.commitT(1);
+		System.out.println(dm.dump());
+		//expected: {X0=0, X1=1, X2=6, X3=6, X4=4, X5=6, X6=6, X7=7, X9=9, X8=8}
+		dm.printLog();
+		//expected: 
+		//1:{X2=6, X3=6, X5=6, }
+		//2:{X6=66, }
+		dm.abortT(2);
+		dm.printLog();
+		//expected: 
+		//1:{X2=6, X3=6, X5=6, }
+	}
+	
+	public void printLog() {
+		Set<Map.Entry<Integer, ArrayList<TransactionLogItemEnty>>> entries = this.transactionLog.entrySet();
+		for(Map.Entry<Integer, ArrayList<TransactionLogItemEnty>> entry : entries) {
+			System.out.print(entry.getKey() + ":{");
+			for(TransactionLogItemEnty log : entry.getValue()) {
+				System.out.print(log.resource + "=" + log.value + ", ");
+			}
+			System.out.println("}");
+		}
+	}
 }
