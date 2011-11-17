@@ -22,7 +22,7 @@ public class TransactionManager {
 	
 	public Map<String, List<Integer>> varLocations;
 	
-	public Date currentTimestamp;
+	public TimeStamp currentTimestamp;
 	
 	/**
 	 * Default constructor. Initializes all member variables.
@@ -53,7 +53,7 @@ public class TransactionManager {
 		
 		while(!inputLine.equalsIgnoreCase("exit")) {
 			// set the new current time stamp
-			transManager.currentTimestamp = new Date();
+			transManager.currentTimestamp = new TimeStamp();
 			
 			
 			// parse input into instruction list
@@ -169,20 +169,33 @@ public class TransactionManager {
 				String response = sendToSite(site, command);
 				
 				// parse response
-				StringTokenizer st = new StringTokenizer(response);
-				String op = st.nextToken();
-				String result = st.nextToken();
+				String resp[] = response.split(" ");
+				String result = resp[1];
 				
 				if (result.equals("0"))
 				{
-					// EXE_RESP 0 [T_NAME_HOLDER] [T_NAME_REQ]
+					// EXE_RESP 1/0/-1 [{T_NAME_HOLDER,T_NAME_HOLDER...}] [T_NAME_REQ] [V_NAME:V_VALUE]
 					// perform wait-die protocol	
-					int holderID = new Integer(st.nextToken());
-					int reqID = new Integer(st.nextToken());
-					Date holderTimestamp = transTable.getTimestamp(holderID);
-					Date reqTimestamp = transTable.getTimestamp(reqID);
+					String holders[] = resp[2].split("\\{|,|\\}");
+					int[] holderID = new int[holders.length];
 					
-					if (holderTimestamp.before(reqTimestamp)) {
+					int j = 0;
+					for(String h : holders) {
+						holderID[j] = new Integer(h);
+						j++;
+					}
+					
+					int reqID = new Integer(resp[3]);
+					TimeStamp oldestHolderTimestamp = transTable.getTimestamp(holderID[0]);
+					for(int ho : holderID) {
+						TimeStamp holderTimestamp = transTable.getTimestamp(ho);
+						if (holderTimestamp.before(oldestHolderTimestamp)) {
+							oldestHolderTimestamp = holderTimestamp;
+						}
+					}
+					TimeStamp reqTimestamp = transTable.getTimestamp(reqID);
+					
+					if (oldestHolderTimestamp.before(reqTimestamp)) {
 						// abort req
 						sendAllSites("ABORT " + reqID);
 					} else {

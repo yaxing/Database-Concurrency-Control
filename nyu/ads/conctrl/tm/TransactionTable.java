@@ -1,6 +1,7 @@
 package nyu.ads.conctrl.tm;
 
 import java.util.*;
+import nyu.ads.conctrl.entity.*;
 
 import nyu.ads.conctrl.tm.entity.Transaction;
 
@@ -50,7 +51,7 @@ public class TransactionTable {
 	 * @param transID
 	 * @return timestamp
 	 */
-	public Date getTimestamp(int number)
+	public TimeStamp getTimestamp(int number)
 	{
 		for (Transaction t : TransactionList) {
 			if (t.transID == number) {

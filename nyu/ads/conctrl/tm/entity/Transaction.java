@@ -1,6 +1,7 @@
 package nyu.ads.conctrl.tm.entity;
 
 import java.util.*;
+import nyu.ads.conctrl.entity.*;
 
 /**
  * Entity representing a Transaction
@@ -9,7 +10,7 @@ import java.util.*;
  */
 public class Transaction {
 	public int transID;
-	public Date timestamp;
+	public TimeStamp timestamp;
 	public int status;
 	public Boolean readOnly;
 	public Boolean shouldAbort;
@@ -23,7 +24,7 @@ public class Transaction {
 	 * @param status
 	 * @param readOnly
 	 */
-	public Transaction(int transID, Date timestamp, int status, Boolean readOnly) {
+	public Transaction(int transID, TimeStamp timestamp, int status, Boolean readOnly) {
 		super();
 		this.transID = transID;
 		this.timestamp = timestamp;
