@@ -67,7 +67,7 @@ public class TransactionManager {
 			for (ParsedInstrEnty i : instructionList)
 			{
 				// process each instruction sequentially
-				//transManager.process(i);
+				transManager.process(i);
 			}			
 			
 			// get the next line of user input
