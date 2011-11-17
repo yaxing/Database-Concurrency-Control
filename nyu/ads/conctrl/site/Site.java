@@ -177,7 +177,7 @@ public class Site{
 		else if(msg[3].equals("R")) {
 			String resp = lockMng.lock(transacId, res, LockType.READ);
 			if(resp == null) {
-				return res + ":" + dataMng.read(transacId, res);
+				return InstrCode.EXE_RESP + " " + res + ":" + dataMng.read(transacId, res);
 			}
 			else {
 				return resp;
