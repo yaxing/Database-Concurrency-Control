@@ -46,7 +46,7 @@ public class TransactionManager {
 		inputScanner.useDelimiter(System.getProperty("line.separator"));
 		String inputLine = "";
 		
-		//transManager.initSites();
+		transManager.initSites();
 
 		// get line of user input
 		inputLine = inputScanner.next();
@@ -143,13 +143,16 @@ public class TransactionManager {
 				// Two-phase commit:
 				// send message to all sites, get receipts
 				
+				sendAllSites("COMMIT " + i.transactionId);
 				// if all are good to go, send message to commit
 				
 				// update trans table
 				break;
 			case DUMP:
 				// send message to applicable sites
-				siteList.get(0).query();
+				String msg = "DUMP";
+				if(!i.resource.isEmpty()) {  msg += " " + i.resource; }
+				System.out.println(sendToSite(i.site, msg));
 				break;
 			case FAIL:
 				// send message to applicable site
@@ -158,20 +161,33 @@ public class TransactionManager {
 			case RECOVER:
 				// send message to applicable site
 				sendToSite(i.site, "RECOVER");
+				break;
 			case R:
 			case W:
 				// send message to applicable sites
 				// recieve receipt
 				int site = -1;
 				if(varLocations.containsKey(i.resource)) {
-					site = varLocations.get(i.resource).indexOf(0);
+					// TODO: check sitelist to make sure site  is up
+					List<Integer> siteIndexList = varLocations.get(i.resource);
+					for (Integer siteIndex : siteIndexList)
+					{
+						if(siteList.get(siteIndex-1).getStatus() == 1) {
+							site = varLocations.get(i.resource).get(0);
+						}
+					}
+					if (site == -1) {
+						// all sites with the variable are failed
+						System.err.println("All sites are failed for resource: " + i.resource);
+						System.exit(-1);
+					}
 				}
 				else {
 					System.err.println("No site holds the resource: " + i.resource);
 					System.exit(-1);
 				}
 				
-				String command = "INSTR " + i.transactionId + " " + transTable.getTimestamp(i.transactionId) +
+				String command = "INSTR " + i.transactionId + " " + transTable.getTimestamp(i.transactionId).getTime() +
 					" " + i.opcode + " " + i.resource + " " + i.value;
 				String response = sendToSite(site, command);
 				
@@ -179,11 +195,21 @@ public class TransactionManager {
 				String resp[] = response.split(" ");
 				String result = resp[1];
 				
-				if (result.equals("0"))
+				if (result.equals("1")) {  
+					// write successful
+				}
+				else if (result.equals("-1")) {
+					// site has failed
+				}
+				else if (result.equals("0"))
 				{
-					// EXE_RESP 1/0/-1 [{T_NAME_HOLDER,T_NAME_HOLDER...}] [T_NAME_REQ] [V_NAME:V_VALUE]
+					// could not acquire lock
+					
+					// EXE_RESP 0 [{T_NAME_HOLDER,T_NAME_HOLDER...}] [T_NAME_REQ] [V_NAME:V_VALUE]
 					// perform wait-die protocol	
-					String holders[] = resp[2].split("\\{|,|\\}");
+					String holdersFull = resp[2].substring(1, resp[2].length()-1);
+					String holders[] = holdersFull.split(",");
+					
 					int[] holderID = new int[holders.length];
 					
 					int j = 0;
@@ -204,11 +230,21 @@ public class TransactionManager {
 					
 					if (oldestHolderTimestamp.before(reqTimestamp)) {
 						// abort req
+						System.out.println("ABORT " + reqID);
 						sendAllSites("ABORT " + reqID);
 					} else {
-						// abort holder
-						sendAllSites("ABORT " + reqID);
+						// abort holder(s)
+						for(int hol : holderID) {
+							if(hol != reqID) {
+								System.out.println("ABORT " + hol);
+								sendAllSites("ABORT " + hol);
+							}
+						}
 					}					
+				}
+				else {
+					// successful read operation
+					System.out.println(response);
 				}
 				
 				break;
@@ -222,8 +258,8 @@ public class TransactionManager {
 	 * @return
 	 */
 	public String sendToSite(int site, String command) {
-		siteList.get(site).setBuffer(command);
-		return siteList.get(site).process();
+		siteList.get(site-1).setBuffer(command);
+		return siteList.get(site-1).process();
 	}
 	
 	/**
@@ -293,6 +329,7 @@ public class TransactionManager {
 					}
 					else {
 						pie.site = new Integer(msg[1]);
+						pie.resource = "";
 					}
 				}
 			}
