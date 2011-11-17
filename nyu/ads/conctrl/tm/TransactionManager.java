@@ -162,10 +162,17 @@ public class TransactionManager {
 			case W:
 				// send message to applicable sites
 				// recieve receipt
-				int site = varLocations.get(i.resource).indexOf(0);
+				int site = -1;
+				if(varLocations.containsKey(i.resource)) {
+					site = varLocations.get(i.resource).indexOf(0);
+				}
+				else {
+					System.err.println("No site holds the resource: " + i.resource);
+					System.exit(-1);
+				}
 				
-				// TODO: send full timestamp?
-				String command = "INSTR " + i.transactionId + " W " + i.resource + " " + i.value;
+				String command = "INSTR " + i.transactionId + " " + transTable.getTimestamp(i.transactionId) +
+					" " + i.opcode + " " + i.resource + " " + i.value;
 				String response = sendToSite(site, command);
 				
 				// parse response
