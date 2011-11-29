@@ -214,6 +214,8 @@ public class Site{
 	 * @return boolean
 	 */
 	public String op_abort(int transactionId) {
+		lockMng.unlockTransac(transactionId);
+		dataMng.abortT(transactionId);
 		return null;
 	}
 	
