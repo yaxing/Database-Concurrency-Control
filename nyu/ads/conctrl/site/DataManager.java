@@ -114,7 +114,14 @@ public class DataManager {
 		return db.get(res);
 	}
 
-	public String roRead(int transacId, TimeStamp timestamp) {
+	public String roRead(String resourceName, TimeStamp timestamp) {
+		ArrayList<SnapShotEnty> sList = this.snapshots.get(resourceName);
+		int counter = sList.size() - 1;
+		for(; counter >= 0; counter --) {
+			if(sList.get(counter).timestamp.compareTo(timestamp) > 0) {
+				
+			}
+		}
 		return null;
 	}
 

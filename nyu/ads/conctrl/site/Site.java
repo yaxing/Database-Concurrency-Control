@@ -184,7 +184,7 @@ public class Site{
 			}
 		}
 		else if(msg[3].equals("RO")) {
-			return res + ":" + dataMng.roRead(transacId, (TimeStamp)TimeStamp.valueOf(msg[2]));
+			return res + ":" + dataMng.roRead(msg[4], new TimeStamp(Long.parseLong(msg[2])));
 		}
 		return "EXEE_RESP 0 UNKNOWN_OPERATION";
 	}

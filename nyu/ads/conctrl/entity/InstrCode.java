@@ -67,5 +67,10 @@ public enum InstrCode {
 	 * @example
 	 * INIT X1:19 X2:12:UNIQ X6:15
 	 */
-	INIT
+	INIT,
+	
+	/**
+	 * SNAPSHOT timestamp
+	 */
+	SNAPSHOT
 }
