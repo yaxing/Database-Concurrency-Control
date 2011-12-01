@@ -1,6 +1,7 @@
 package nyu.ads.conctrl.site;
 
 import java.util.*;
+import java.sql.*;
 
 import nyu.ads.conctrl.entity.*;
 import nyu.ads.conctrl.site.entity.*;
@@ -31,6 +32,12 @@ public class DataManager {
 	 */
 	private HashMap<Integer, ArrayList<TransactionLogItemEnty>> transactionLog; 
 
+	/**
+	 * snapshot queue
+	 * 
+	 * only keep most recent snapshot_qty snapshots
+	 */
+	private int snapshot_qty = 20;
 	private HashMap<String, ArrayList<SnapShotEnty>> snapshots; //resource=>snapshots
 												// snapshots: String[2] = (value, timestamp);
 
@@ -170,14 +177,31 @@ public class DataManager {
 	 * take a snapshot with current timestamp
 	 * @param timestamp
 	 */
-	public void snapshot(String timestamp) {
+	public void snapshot() {
 		Set<Map.Entry<String, String>> entries = db.entrySet();
 		TimeStamp now = new TimeStamp();
 		for(Map.Entry<String, String> entry : entries) {
 			String resource = entry.getValue();
 			ArrayList<SnapShotEnty> list = snapshots.get(resource);
 			list.add(snapshotGen(resource, now));
-			if(list.size() > 20) {
+			if(list.size() > snapshot_qty) {
+				list.remove(0);
+			}
+		}
+	}
+	
+	/**
+	 * take a snapshot with given timestamp
+	 * @param String(long) timestamp
+	 */
+	public void snapshot(String timestamp) {
+		Set<Map.Entry<String, String>> entries = db.entrySet();
+		TimeStamp now = (TimeStamp)Timestamp.valueOf(timestamp);
+		for(Map.Entry<String, String> entry : entries) {
+			String resource = entry.getValue();
+			ArrayList<SnapShotEnty> list = snapshots.get(resource);
+			list.add(snapshotGen(resource, now));
+			if(list.size() > snapshot_qty) {
 				list.remove(0);
 			}
 		}
