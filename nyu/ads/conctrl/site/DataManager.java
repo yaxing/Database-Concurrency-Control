@@ -114,12 +114,20 @@ public class DataManager {
 		return db.get(res);
 	}
 
+	/**
+	 * read only read function
+	 * 
+	 * search for the snapshot list of the resource, return the latest snapshot's value
+	 * @param resourceName
+	 * @param timestamp
+	 * @return
+	 */
 	public String roRead(String resourceName, TimeStamp timestamp) {
 		ArrayList<SnapShotEnty> sList = this.snapshots.get(resourceName);
 		int counter = sList.size() - 1;
 		for(; counter >= 0; counter --) {
-			if(sList.get(counter).timestamp.compareTo(timestamp) > 0) {
-				
+			if(sList.get(counter).timestamp.compareTo(timestamp) <= 0) {
+				return sList.get(counter).value; 
 			}
 		}
 		return null;
@@ -233,10 +241,14 @@ public class DataManager {
 		return new SnapShotEnty(db.get(resource), timestamp);
 	} 
 
+	
+	//===========test funcs==================//
 	public static void main(String[] args) {
 		DataManager dm = new DataManager();
 		String[] uniq = new String[10];
 		int j = 0;
+		
+		//===========initialization testing======//
 		for(int i = 0; i < 10; i ++) {
 			dm.newRes("X" + i, Integer.toString(i));
 			if(i % 2 == 1) {
@@ -252,10 +264,14 @@ public class DataManager {
 		}
 		System.out.println();
 		
+		//========snapshots testing======//
 		String timestamp = Long.toString(new TimeStamp().getTime());
 		dm.snapshot(timestamp);
 		dm.printSnapshot();
-
+		
+		TimeStamp timestamp1 = new TimeStamp();//prepare a read-only transaction
+		
+		//======read, write, commit testing======//
 		dm.write(1, "X2", "6");
 		dm.write(1, "X3", "6");
 		dm.write(1, "X5", "6");
@@ -275,8 +291,19 @@ public class DataManager {
 		dm.printLog();
 		//expected: 
 		//1:{X2=6, X3=6, X5=6, }
+		
+		
+		//========readonly testing======//
+		String timestamp2 = Long.toString(new TimeStamp().getTime());
+		dm.snapshot(timestamp2);
+		dm.printSnapshot();
+		System.out.println(dm.roRead("X5", timestamp1));
+		//expected: 5
 	}
 
+	/**
+	 * debug function dump transactionLog
+	 */
 	public void printLog() {
 		Set<Map.Entry<Integer, ArrayList<TransactionLogItemEnty>>> entries = this.transactionLog.entrySet();
 		for(Map.Entry<Integer, ArrayList<TransactionLogItemEnty>> entry : entries) {
@@ -288,6 +315,9 @@ public class DataManager {
 		}
 	}
 	
+	/**
+	 * debug function dump snapshots
+	 */
 	public void printSnapshot() {		
 		Set<Map.Entry<String, ArrayList<SnapShotEnty>>> entries = this.snapshots.entrySet();
 		for(Map.Entry<String, ArrayList<SnapShotEnty>> entry : entries) {
