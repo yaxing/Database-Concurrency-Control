@@ -44,6 +44,7 @@ public class DataManager {
 	DataManager() {
 		this.db = new HashMap<String, String>();
 		this.transactionLog = new HashMap<Integer, ArrayList<TransactionLogItemEnty>>();
+		this.snapshots = new HashMap<String, ArrayList<SnapShotEnty>>();
 	}
 
 	/**
@@ -183,6 +184,10 @@ public class DataManager {
 		for(Map.Entry<String, String> entry : entries) {
 			String resource = entry.getValue();
 			ArrayList<SnapShotEnty> list = snapshots.get(resource);
+			if(list == null) {
+				list = new ArrayList<SnapShotEnty>();
+				this.snapshots.put(resource, list);
+			}
 			list.add(snapshotGen(resource, now));
 			if(list.size() > snapshot_qty) {
 				list.remove(0);
@@ -196,10 +201,14 @@ public class DataManager {
 	 */
 	public void snapshot(String timestamp) {
 		Set<Map.Entry<String, String>> entries = db.entrySet();
-		TimeStamp now = (TimeStamp)Timestamp.valueOf(timestamp);
+		TimeStamp now = new TimeStamp(Long.parseLong(timestamp));
 		for(Map.Entry<String, String> entry : entries) {
-			String resource = entry.getValue();
+			String resource = entry.getKey();
 			ArrayList<SnapShotEnty> list = snapshots.get(resource);
+			if(list == null) {
+				list = new ArrayList<SnapShotEnty>();
+				this.snapshots.put(entry.getKey(), list);
+			}
 			list.add(snapshotGen(resource, now));
 			if(list.size() > snapshot_qty) {
 				list.remove(0);
@@ -235,6 +244,10 @@ public class DataManager {
 			}
 		}
 		System.out.println();
+		
+		String timestamp = Long.toString(new TimeStamp().getTime());
+		dm.snapshot(timestamp);
+		dm.printSnapshot();
 
 		dm.write(1, "X2", "6");
 		dm.write(1, "X3", "6");
@@ -263,6 +276,17 @@ public class DataManager {
 			System.out.print(entry.getKey() + ":{");
 			for(TransactionLogItemEnty log : entry.getValue()) {
 				System.out.print(log.resource + "=" + log.value + ", ");
+			}
+			System.out.println("}");
+		}
+	}
+	
+	public void printSnapshot() {		
+		Set<Map.Entry<String, ArrayList<SnapShotEnty>>> entries = this.snapshots.entrySet();
+		for(Map.Entry<String, ArrayList<SnapShotEnty>> entry : entries) {
+			System.out.print(entry.getKey() + ":{");
+			for(SnapShotEnty s : entry.getValue()) {
+				System.out.print(s.value + ":" + s.timestamp.toString() + ",");
 			}
 			System.out.println("}");
 		}
