@@ -41,6 +41,9 @@ public class Site{
 	 * @return String containing execution result that can be parsed by TM
 	 */
 	public String process() {
+		if(this.status == 0) {
+			return "FAIL";
+		}
 		String[] msg = buffer.split(" ");
 		InstrCode opcode = InstrCode.valueOf(msg[0]);
 		String result = null;
@@ -72,6 +75,9 @@ public class Site{
 			break;
 		case INIT:
 			op_init_res(msg);
+			break;
+		case SNAPSHOT:
+			op_snapshot(msg[1]);
 			break;
 		default:
 			break;
@@ -225,6 +231,14 @@ public class Site{
 		}
 		return dataMng.dump(resName);
 	}
+	
+	/**
+	 * based on given timestamp, take a snapshot of committed source values
+	 * @param timestamp
+	 */
+	public void op_snapshot(String timestamp) {
+		dataMng.snapshot(timestamp);
+	}
 	/*
 	 * test
 	 */
@@ -234,10 +248,7 @@ public class Site{
 		site.process();
 		site.setBuffer("DUMP");
 		System.out.println(site.process());
-//		String[] uniq = site.dataMng.getUniqRes();
-//		for(String s : uniq) {
-//			System.out.print(s + " ");
-//		}
+		
 		site.setBuffer("INSTR 1 02366662 W X1 6");
 		System.out.println(site.process());
 		
@@ -250,10 +261,29 @@ public class Site{
 		site.setBuffer("INSTR 2 02366662 R X1 6");
 		System.out.println(site.process());
 		
+		String timestamp = Long.toString(new TimeStamp().getTime());
+		site.setBuffer("SNAPSHOT " + timestamp);
+		site.process();
+		
 		site.setBuffer("COMMIT 1");
 		System.out.println(site.process());
 		
 		site.setBuffer("DUMP");
 		System.out.println(site.process());
+		
+		timestamp = Long.toString(new TimeStamp().getTime());
+		site.setBuffer("INSTR 6 " + timestamp + " RO X1");
+		System.out.println(site.process());
+		
+		/*expected output:
+			{X1=19, X2=12, X6=15}
+			EXE_RESP 1
+			{X1=19, X2=12, X6=15}
+			EXE_RESP X1:6
+			EXE_RESP 0 {1} 2
+			COMMIT_RESP 1
+			{X1=6, X2=12, X6=15}
+			X1:19
+		 */
 	}
 }

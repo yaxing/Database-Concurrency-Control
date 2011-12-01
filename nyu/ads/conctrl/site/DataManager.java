@@ -1,7 +1,6 @@
 package nyu.ads.conctrl.site;
 
 import java.util.*;
-import java.sql.*;
 
 import nyu.ads.conctrl.entity.*;
 import nyu.ads.conctrl.site.entity.*;
