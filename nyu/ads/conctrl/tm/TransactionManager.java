@@ -24,6 +24,10 @@ public class TransactionManager {
 	
 	public TimeStamp currentTimestamp;
 	
+	public List<Integer> commitLog; // List of committed transactions
+	
+	public static Boolean DEBUG = true; 
+	
 	/**
 	 * Default constructor. Initializes all member variables.
 	 */
@@ -33,6 +37,7 @@ public class TransactionManager {
 		varList = new ArrayList<Resource>();
 		waitingQueueList = new ArrayList<WaitingQueue>();
 		varLocations = new HashMap<String, List<Integer>>();
+		commitLog = new ArrayList<Integer>();
 	}
 	
 	/**
@@ -81,22 +86,31 @@ public class TransactionManager {
 	public void initSites() {
 		// init sites
 		Site s = new Site();
-		String[] variables = {"X1", "X2", "X6"};
-		String[] uniqueVariables = {"X2"};
-		s.setBuffer("INIT X1:19 X2:12:UNIQ X6:15");
+		String[] variables = {"X2", "X8"};
+		String[] uniqueVariables = {"X2", "X8"};
+		s.setBuffer("INIT X2:2:UNIQ X8:8:UNIQ");
 		s.process();
 		siteList.add(s);
 		
 		addVariableLocations(variables, 1);
 	
 		s = new Site();
-		String[] variables2 = {"X1", "X3", "X6"};
-		String[] uniqueVariables2= {"X3"};
-		s.setBuffer("INIT X1:19 X3:12:UNIQ X6:15");
+		String[] variables2 = {"X1"};
+		String[] uniqueVariables2= {"X1"};
+		s.setBuffer("INIT X1:1:UNIQ");
 		s.process();
 		siteList.add(s);
 		
 		addVariableLocations(variables2, 2);
+		
+		s = new Site();
+		String[] variables3 = {"X3"};
+		String[] uniqueVariables3= {"X3"};
+		s.setBuffer("INIT X3:3:UNIQ");
+		s.process();
+		siteList.add(s);
+		
+		addVariableLocations(variables3, 3);
 	}
 	
 	public void addVariableLocations(String[] variables, int site) {
@@ -138,12 +152,16 @@ public class TransactionManager {
 				tro.readOnly = true;
 				
 				transTable.addTransaction(tro);
+				
+				sendAllSites("SNAPSHOT " + tro.timestamp.getTime());
 				break;
 			case END:
 				// Two-phase commit:
 				// send message to all sites, get receipts
 				
 				sendAllSites("COMMIT " + i.transactionId);
+				
+				commitLog.add(new Integer(i.transactionId));
 				// if all are good to go, send message to commit
 				
 				// update trans table
@@ -151,8 +169,17 @@ public class TransactionManager {
 			case DUMP:
 				// send message to applicable sites
 				String msg = "DUMP";
-				if(!i.resource.isEmpty()) {  msg += " " + i.resource; }
-				System.out.println(sendToSite(i.site, msg));
+				if(i.resource != null) {  msg += " " + i.resource; }
+				if(i.site != -1) {
+					System.out.println(sendToSite(i.site, msg));
+				}
+				else {
+					List<String> result = sendAllSites(msg);
+					for(String r: result)
+					{
+						System.out.println(r);
+					}
+				}
 				break;
 			case FAIL:
 				// send message to applicable site
@@ -162,6 +189,7 @@ public class TransactionManager {
 				// send message to applicable site
 				sendToSite(i.site, "RECOVER");
 				break;
+			case RO:
 			case R:
 			case W:
 				// send message to applicable sites
@@ -188,9 +216,10 @@ public class TransactionManager {
 				}
 				
 				String command = "INSTR " + i.transactionId + " " + transTable.getTimestamp(i.transactionId).getTime() +
-					" " + i.opcode + " " + i.resource + " " + i.value;
+					" " + i.opcode + " " + i.resource + " " + (i.value!=null ?i.value:"");
 				String response = sendToSite(site, command);
 				
+								
 				// parse response
 				String resp[] = response.split(" ");
 				String result = resp[1];
@@ -258,8 +287,16 @@ public class TransactionManager {
 	 * @return
 	 */
 	public String sendToSite(int site, String command) {
+		
 		siteList.get(site-1).setBuffer(command);
-		return siteList.get(site-1).process();
+		
+		String result = siteList.get(site-1).process();
+		
+		if (DEBUG) {
+			System.out.println("**DEBUG** Site={" + site + "} Command=\"" + command + "\"");			
+			System.out.println("**DEBUG** Result=\"" + result + "\"");
+		}
+		return result;
 	}
 	
 	/**
@@ -270,9 +307,17 @@ public class TransactionManager {
 	public List<String> sendAllSites(String command) {
 		List<String> responseList = new ArrayList<String>();
 		
+		String result = "";
+		
 		for(int i = 0; i < siteList.size(); i++) {
 			siteList.get(i).setBuffer(command);
 			responseList.add(siteList.get(i).process());
+			result += responseList.get(i);
+		}
+		
+		if (DEBUG) {
+			System.out.println("**DEBUG** Site={all} Command=\"" + command + "\"");			
+			System.out.println("**DEBUG** Result=\"" + result + "\"");
 		}
 		
 		return responseList;
@@ -297,7 +342,7 @@ public class TransactionManager {
 				msg[i] = msg[i].trim().toUpperCase();
 			}
 			
-			OpCode op = OpCode.valueOf(msg[0]);
+			OpCode op  = OpCode.valueOf(msg[0]);
 			ParsedInstrEnty pie = new ParsedInstrEnty();
 			pie.opcode = op;
 			pie.originalInstruction = m;
@@ -311,6 +356,9 @@ public class TransactionManager {
 			case R:
 				pie.transactionId = new Integer(msg[1].substring(1));
 				pie.resource = msg[2];
+				if(transTable.TransactionList.get(pie.transactionId-1).readOnly) {
+					pie.opcode = OpCode.RO;
+				}
 				break;
 			case W:
 				pie.transactionId = new Integer(msg[1].substring(1));
@@ -322,14 +370,18 @@ public class TransactionManager {
 				pie.site = new Integer(msg[1]);
 				break;
 			case DUMP:
-				if (msg.length == 1) { break;}
+				if (msg.length == 1) {
+					pie.site = -1;
+					break;
+				}
 				else {
 					if(msg[1].startsWith("X")) {
 						pie.resource = msg[1];
+						pie.site = -1;
 					}
 					else {
 						pie.site = new Integer(msg[1]);
-						pie.resource = "";
+						pie.resource = (msg.length == 3 ? msg[2] : "");
 					}
 				}
 			}

@@ -11,6 +11,7 @@ public enum OpCode {
 	END,
 	W,
 	R,
+	RO,
 	DUMP,
 	FAIL,
 	RECOVER
