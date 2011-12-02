@@ -22,7 +22,8 @@ DUMP X1
 
 6. fail  FAIL
 
-7. recover RECOVER
+7. recover RECOVER [COMMITTED_TRANSACID1,2,...]
+RECOVER 6,10,23,1
 
 8. initial variables INIT [VAR_NAME:V_VALUE:UNIQ]
 
