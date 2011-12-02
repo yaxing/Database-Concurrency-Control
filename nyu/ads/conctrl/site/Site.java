@@ -42,7 +42,7 @@ public class Site{
 	 */
 	public String process() {
 		if(this.status == 0) {
-			return "FAIL";
+			return InstrCode.EXE_RESP + " -1";
 		}
 		String[] msg = buffer.split(" ");
 		InstrCode opcode = InstrCode.valueOf(msg[0]);
@@ -174,7 +174,7 @@ public class Site{
 			String resp = lockMng.lock(transacId, res, LockType.WRITE);
 			if(resp == null) {
 				dataMng.write(transacId, res, msg[5]);
-				return "EXE_RESP 1";
+				return InstrCode.EXE_RESP + " 1";
 			}
 			else {
 				return resp;
@@ -190,7 +190,7 @@ public class Site{
 			}
 		}
 		else if(msg[3].equals("RO")) {
-			return res + ":" + dataMng.roRead(msg[4], new TimeStamp(Long.parseLong(msg[2])));
+			return InstrCode.EXE_RESP + " " + res + ":" + dataMng.roRead(msg[4], new TimeStamp(Long.parseLong(msg[2])));
 		}
 		return "EXEE_RESP 0 UNKNOWN_OPERATION";
 	}

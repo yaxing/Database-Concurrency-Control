@@ -131,14 +131,14 @@ public class LockManager {
 				return null;
 			}
 		}
-		//if lock doesn't exist
+		//if recover lock
 		else if(recoverLocks.containsKey(res)) {
 			if(requestLockType == LockType.WRITE) {
 				newLock(transacId, res, requestLockType);
 				return null;
 			}
 			else {
-				return InstrCode.EXE_RESP + "-1";
+				return InstrCode.EXE_RESP + " 0";
 			}
 		}
 		else {
