@@ -92,6 +92,7 @@ public class Site{
 	 */
 	public void op_fail() {
 		this.status = 0;
+		lockMng.clearLocks();
 	}
 	
 	/**
