@@ -33,6 +33,11 @@ public enum InstrCode {
 	DUMP,
 	
 	FAIL,
+	
+	/**
+	 * RECOVER [COMMITED_TRANSACID1,2,...]
+	 * RECOVER 1,3,2,6
+	 */
 	RECOVER,
 	
 	/**
@@ -71,6 +76,8 @@ public enum InstrCode {
 	
 	/**
 	 * SNAPSHOT timestamp
+	 * 
+	 * SNAPSHOT 918361
 	 */
 	SNAPSHOT
 }
