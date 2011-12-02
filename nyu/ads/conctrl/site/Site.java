@@ -22,13 +22,13 @@ public class Site{
 	
 	private int status = 1; //0: failed, 1: running
 	
-	private ArrayList<Integer> commitLog; //committed transaction id list, sorted based on timestamp
+	//private ArrayList<Integer> commitLog; //committed transaction id list, sorted based on timestamp
 	
 	public Site() {
 		buffer = "";
 		lockMng = new LockManager();
 		dataMng = new DataManager();
-		commitLog = new ArrayList<Integer>();
+		//commitLog = new ArrayList<Integer>();
 	}
 	
 	/**
@@ -104,9 +104,6 @@ public class Site{
 	 */
 	public void op_recover() {
 		this.status = 1;
-		for(Integer transacId : commitLog) {
-			this.dataMng.commitT(transacId);
-		}
 		String[] uniq = dataMng.getUniqRes();
 		for(String res : uniq) {
 			lockMng.recoverLock(res);
