@@ -162,13 +162,18 @@ public class Site{
 	 */
 	public String op_instr(String[] msg) {
 		if(msg.length < 5) {
-			return "EXEE_RESP 0 UNKNOWN_MSG";
+			return "EXEE_RESP -3 UNKNOWN_MSG";
 		}
 		int transacId = Integer.parseInt(msg[1]);
 		String res = msg[4];
+		
+		if(!dataMng.checkResourceExist(res)) {
+			return InstrCode.EXE_RESP + " -2";
+		}
+		
 		if(msg[3].equals("W")) {
 			if(msg.length < 6) {
-				return "EXEE_RESP 0 UNKNOWN_MSG";
+				return InstrCode.EXE_RESP + " -3 UNKNOWN_MSG";
 			}
 			String resp = lockMng.lock(transacId, res, LockType.WRITE);
 			if(resp == null) {
@@ -189,9 +194,9 @@ public class Site{
 			}
 		}
 		else if(msg[3].equals("RO")) {
-			return InstrCode.EXE_RESP + " " + res + ":" + dataMng.roRead(msg[4], new TimeStamp(Long.parseLong(msg[2])));
+			return InstrCode.EXE_RESP + " " + res + ":" + dataMng.roRead(res, new TimeStamp(Long.parseLong(msg[2])));
 		}
-		return "EXEE_RESP 0 UNKNOWN_OPERATION";
+		return InstrCode.EXE_RESP + " -3 UNKNOWN_MSG";
 	}
 	
 	public String op_commit_query(int transactionId) {

@@ -46,6 +46,10 @@ public class DataManager {
 		this.snapshots = new HashMap<String, ArrayList<SnapShotEnty>>();
 	}
 	
+	public boolean checkResourceExist(String res) {
+		return this.db.containsKey(res);
+	}
+	
 	/**
 	 * get replicated resourses
 	 * @return
