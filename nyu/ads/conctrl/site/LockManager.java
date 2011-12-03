@@ -185,12 +185,17 @@ public class LockManager {
 	 * @param int transacId
 	 */
 	public void unlockTransac(int transacId) {
-		Set<Map.Entry<String, ArrayList<LockEnty>>> entries = locks.entrySet();
-		for(Map.Entry<String, ArrayList<LockEnty>> entry : entries) {
+		Iterator<Map.Entry<String, ArrayList<LockEnty>>> locksIt = locks.entrySet().iterator();
+		
+		while(locksIt.hasNext()) {
+			Map.Entry<String, ArrayList<LockEnty>> entry = (Map.Entry<String, ArrayList<LockEnty>>)locksIt.next();
 			ArrayList<LockEnty> lockInfo = entry.getValue();
-			for(LockEnty lock : lockInfo) {
+			int counter = 0;
+			for(;counter < lockInfo.size(); counter ++) {
+				LockEnty lock = lockInfo.get(counter);
 				if(lock.transacId == transacId) {
-					lockInfo.remove(lock);
+					lockInfo.remove(counter);
+					counter = 0;
 					if(lockInfo.isEmpty()) {
 						locks.remove(entry.getKey());
 						break;
