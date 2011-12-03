@@ -162,6 +162,14 @@ public class DataManager {
 	public void abortT(int transacId) {
 		transactionLog.remove(transacId);
 	}
+	
+	/**
+	 * abort all uncommitted transactions
+	 * for site fail / recover
+	 */
+	public void abortAllTx() {
+		transactionLog.clear();
+	}
 
 	/**
 	 * commit transaction T
@@ -179,6 +187,7 @@ public class DataManager {
 		for(TransactionLogItemEnty log : writeLog) {
 			db.put(log.resource, log.value);
 		}
+		transactionLog.remove(transactionLog);
 		return true;
 	}
 

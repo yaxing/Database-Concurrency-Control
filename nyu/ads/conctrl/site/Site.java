@@ -99,9 +99,8 @@ public class Site{
 	/**
 	 * recover this site
 	 * change status
-	 * recover transactions after server failed and restarted
-	 * recover from transaction log and commit log, recover only committed transactions
 	 * require recover lock for all replicated resources
+	 * abort all uncommitted transactions
 	 */
 	public void op_recover() {
 		this.status = 1;
@@ -109,6 +108,7 @@ public class Site{
 		for(String res : uniq) {
 			lockMng.recoverLock(res);
 		}
+		dataMng.abortAllTx();
 	}
 	
 	public int getStatus() {
