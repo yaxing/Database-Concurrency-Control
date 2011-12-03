@@ -195,7 +195,7 @@ public class LockManager {
 				LockEnty lock = lockInfo.get(counter);
 				if(lock.transacId == transacId) {
 					lockInfo.remove(counter);
-					counter = 0;
+					counter = -1;
 					if(lockInfo.isEmpty()) {
 						locks.remove(entry.getKey());
 						break;
