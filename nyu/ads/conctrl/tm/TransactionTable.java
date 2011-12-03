@@ -86,4 +86,13 @@ public class TransactionTable {
 		return -1;
 	}
 	
+	public void setStatus(int transId, int status)
+	{
+		for (Transaction t: TransactionList) {
+			if(t.transID == transId) {
+				t.status = status;
+			}
+		}
+	}
+	
 }
