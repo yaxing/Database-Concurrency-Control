@@ -151,7 +151,7 @@ public class DataManager {
 				return sList.get(counter).value; 
 			}
 		}
-		return null;
+		return this.db.get(resourceName);
 	}
 
 	/**
