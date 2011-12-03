@@ -45,6 +45,28 @@ public class DataManager {
 		this.transactionLog = new HashMap<Integer, ArrayList<TransactionLogItemEnty>>();
 		this.snapshots = new HashMap<String, ArrayList<SnapShotEnty>>();
 	}
+	
+	/**
+	 * get replicated resourses
+	 * @return
+	 */
+	public ArrayList<String> getReplicatedResource() {
+		ArrayList<String> res = new ArrayList<String>();
+		Set<Map.Entry<String, String>> entries = this.db.entrySet();
+		for(Map.Entry<String, String> entry : entries) {
+			String resource = entry.getKey();
+			int i = 0;
+			for(; i < this.uniqueRes.length; i ++) {
+				if(resource == this.uniqueRes[i]) {
+					continue;
+				}
+			}
+			if(i == this.uniqueRes.length - 1) {
+				res.add(resource);
+			}
+		}
+		return res;
+	}
 
 	/**
 	 * write transaction log

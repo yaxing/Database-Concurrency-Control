@@ -105,7 +105,7 @@ public class Site{
 	 */
 	public void op_recover() {
 		this.status = 1;
-		String[] uniq = dataMng.getUniqRes();
+		ArrayList<String> uniq = dataMng.getReplicatedResource();
 		for(String res : uniq) {
 			lockMng.recoverLock(res);
 		}
