@@ -32,10 +32,10 @@ public class WaitingQueue {
 	
 	public ParsedInstrEnty viewFirst() {
 		if(this.isBlocked()) {
-			return null;
+			return waitingQueue.get(0);
 		}
 		else {
-			return waitingQueue.get(0);
+			return null;	
 		}
 	}
 	

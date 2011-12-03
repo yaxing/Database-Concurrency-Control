@@ -85,7 +85,11 @@ public class TransactionManager {
 			
 			for (ParsedInstrEnty i : instructionList)
 			{
-				if (!transactionsProcessed.contains(new Integer(i.transactionId)))
+				if (transManager.waitingQueueList.containsKey(i.transactionId) && 
+						transManager.waitingQueueList.get(i.transactionId).isBlocked()){
+					transManager.waitingQueueList.get(i.transactionId).enqueue(i);
+				}
+				else if (!transactionsProcessed.contains(new Integer(i.transactionId)))
 				{
 					// process each instruction sequentially
 					if(transManager.process(i))
@@ -93,7 +97,7 @@ public class TransactionManager {
 						// instruction processed correctly
 					}
 					else if(transManager.transTable.containsTransaction(i.transactionId)) {
-						transManager.waitingQueueList.get(i.transactionId-1).enqueue(i);
+						transManager.waitingQueueList.get(i.transactionId).enqueue(i);
 					}
 				}
 			}			
@@ -250,7 +254,7 @@ public class TransactionManager {
 						// all sites with the variable are failed
 						System.err.println("All sites are failed for resource: " + i.resource);
 						System.err.println("Buffering command: " + i.originalInstruction);
-						
+						return false;
 					}
 				}
 				else {
@@ -379,7 +383,7 @@ public class TransactionManager {
 		
 		List<ParsedInstrEnty> instrList = new ArrayList<ParsedInstrEnty>();
 		for(String m : msgs){
-		
+			boolean misformed = false;
 			String[] msg = m.trim().split("\\(|,|\\)");
 			
 			// clean whitespace, make each token upper case
@@ -409,7 +413,10 @@ public class TransactionManager {
 			case W:
 				pie.transactionId = new Integer(msg[1].substring(1));
 				pie.resource = msg[2];
-				pie.value = msg[3];
+				if(msg.length==4)
+					pie.value = msg[3];
+				else 
+					misformed = true;
 				break;
 			case FAIL:
 			case RECOVER:
@@ -431,7 +438,10 @@ public class TransactionManager {
 					}
 				}
 			}
-			instrList.add(pie);
+			if (!misformed)
+				instrList.add(pie);
+			else
+				System.err.println("Misformed command: " + pie.originalInstruction);
 		}
 		
 		
