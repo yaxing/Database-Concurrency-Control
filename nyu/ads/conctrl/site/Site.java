@@ -41,11 +41,12 @@ public class Site{
 	 * @return String containing execution result that can be parsed by TM
 	 */
 	public String process() {
-		if(this.status == 0) {
-			return InstrCode.EXE_RESP + " -1";
-		}
 		String[] msg = buffer.split(" ");
 		InstrCode opcode = InstrCode.valueOf(msg[0]);
+		if(this.status == 0 && opcode != InstrCode.RECOVER) {
+			return InstrCode.EXE_RESP + " -1";
+		}
+		
 		String result = null;
 		switch(opcode) {
 		case INSTR:
