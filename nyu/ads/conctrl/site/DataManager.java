@@ -61,7 +61,7 @@ public class DataManager {
 					continue;
 				}
 			}
-			if(i == this.uniqueRes.length - 1) {
+			if(i == this.uniqueRes.length - 1 || i == 0) {
 				res.add(resource);
 			}
 		}
