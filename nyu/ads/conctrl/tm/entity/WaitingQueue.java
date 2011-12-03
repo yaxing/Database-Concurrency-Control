@@ -12,15 +12,35 @@ import nyu.ads.conctrl.entity.ParsedInstrEnty;
  */
 
 public class WaitingQueue {
-	public int transId;
 	public List<ParsedInstrEnty> waitingQueue;
 
 	/**
 	 * Constructor using a transaction ID
 	 * @param transID
 	 */
-	public WaitingQueue(int t) {
-		transId = t;
+	public WaitingQueue() {
 		waitingQueue = new ArrayList<ParsedInstrEnty>();
 	}
+	
+	public boolean isBlocked() {
+		return !waitingQueue.isEmpty();
+	}
+	
+	public void enqueue(ParsedInstrEnty i)  {
+		waitingQueue.add(i);
+	}
+	
+	public ParsedInstrEnty viewFirst() {
+		if(this.isBlocked()) {
+			return waitingQueue.get(0);
+		}
+		else {
+			return null;	
+		}
+	}
+	
+	public void dequeue() {
+		waitingQueue.remove(0);
+	}
+	
 }

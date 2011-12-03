@@ -24,6 +24,16 @@ public class TransactionTable {
 		TransactionList = new ArrayList<Transaction>();
 	}
 	
+	public boolean containsTransaction(int transID)
+	{
+		for (Transaction t : TransactionList) {
+			if (t.transID == transID) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	/**
 	 * Add a transaction to the table
 	 * @param trans

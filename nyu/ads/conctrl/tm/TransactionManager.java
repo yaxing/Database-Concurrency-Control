@@ -1,5 +1,7 @@
 package nyu.ads.conctrl.tm;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 import nyu.ads.conctrl.site.Site;
 import nyu.ads.conctrl.entity.*;
@@ -14,7 +16,7 @@ import nyu.ads.conctrl.tm.entity.*;
 public class TransactionManager {
 	public TransactionTable transTable;  // List of transactions, statuses, and timestamp of origin
 	
-	public List<WaitingQueue> waitingQueueList; 
+	public Map<Integer, WaitingQueue> waitingQueueList; 
 	
 	public List<Site> siteList; // list of sites
 	
@@ -35,7 +37,7 @@ public class TransactionManager {
 		transTable = new TransactionTable();
 		siteList = new ArrayList<Site>();
 		varList = new ArrayList<Resource>();
-		waitingQueueList = new ArrayList<WaitingQueue>();
+		waitingQueueList = new HashMap<Integer, WaitingQueue>();
 		varLocations = new HashMap<String, List<Integer>>();
 		commitLog = new ArrayList<Integer>();
 	}
@@ -64,15 +66,40 @@ public class TransactionManager {
 			// parse input into instruction list
 			List<ParsedInstrEnty> instructionList = transManager.parse(inputLine);
 			
+			List<Integer> transactionsProcessed = new ArrayList<Integer>();
+			
 			// check WaitingQueues
-			if (transManager.waitingQueueList.size() > 0) {
+			Iterator it = transManager.waitingQueueList.entrySet().iterator();
+			while(it.hasNext()){
+				Map.Entry<Integer, WaitingQueue> pairs = (Map.Entry<Integer, WaitingQueue>)it.next();
 				// check to see if the transactions are still blocked
+				if (pairs.getValue().isBlocked()) {
+					// try to process the first one
+					if(transManager.process(pairs.getValue().viewFirst())){
+						int i = pairs.getValue().viewFirst().transactionId;
+						pairs.getValue().dequeue();
+						transactionsProcessed.add(i);
+					}
+				}		
 			}
 			
 			for (ParsedInstrEnty i : instructionList)
 			{
-				// process each instruction sequentially
-				transManager.process(i);
+				if (transManager.waitingQueueList.containsKey(i.transactionId) && 
+						transManager.waitingQueueList.get(i.transactionId).isBlocked()){
+					transManager.waitingQueueList.get(i.transactionId).enqueue(i);
+				}
+				else if (!transactionsProcessed.contains(new Integer(i.transactionId)))
+				{
+					// process each instruction sequentially
+					if(transManager.process(i))
+					{
+						// instruction processed correctly
+					}
+					else if(transManager.transTable.containsTransaction(i.transactionId)) {
+						transManager.waitingQueueList.get(i.transactionId).enqueue(i);
+					}
+				}
 			}			
 			
 			// get the next line of user input
@@ -85,32 +112,32 @@ public class TransactionManager {
 	 */
 	public void initSites() {
 		// init sites
-		Site s = new Site();
-		String[] variables = {"X2", "X8"};
-		String[] uniqueVariables = {"X2", "X8"};
-		s.setBuffer("INIT X2:2:UNIQ X8:8:UNIQ");
-		s.process();
-		siteList.add(s);
-		
-		addVariableLocations(variables, 1);
-	
-		s = new Site();
-		String[] variables2 = {"X1"};
-		String[] uniqueVariables2= {"X1"};
-		s.setBuffer("INIT X1:1:UNIQ");
-		s.process();
-		siteList.add(s);
-		
-		addVariableLocations(variables2, 2);
-		
-		s = new Site();
-		String[] variables3 = {"X3"};
-		String[] uniqueVariables3= {"X3"};
-		s.setBuffer("INIT X3:3:UNIQ");
-		s.process();
-		siteList.add(s);
-		
-		addVariableLocations(variables3, 3);
+		try {
+			File sitesFile = new File("src/sites");
+			Scanner sc = new Scanner(sitesFile);
+			sc.useDelimiter(System.getProperty("line.separator"));
+			while(sc.hasNext()){
+				String siteTextFull = sc.next();
+				String[] siteText = siteTextFull.split(" ");
+				int site = new Integer(siteText[0]);
+				
+				Site s = new Site();
+				String[] variables = new String[siteText.length-1];
+				String buffer = "INIT ";
+				for(int i = 1; i < siteText.length; i++){
+					buffer += siteText[i] + " ";
+					variables[i-1] = siteText[i].split(":")[0]; 
+				}
+				s.setBuffer(buffer);
+				s.process();
+				siteList.add(s);
+				
+				addVariableLocations(variables, site);
+			}			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
 	
 	public void addVariableLocations(String[] variables, int site) {
@@ -131,7 +158,7 @@ public class TransactionManager {
 	 * Process method that processes the current instruction.
 	 * @param: the instruction
 	 */
-	public void process(ParsedInstrEnty i) {
+	public boolean process(ParsedInstrEnty i) {
 		switch(i.opcode) {
 			case BEGIN:
 				// update trans table
@@ -141,8 +168,14 @@ public class TransactionManager {
 				t.status = 1;
 				t.readOnly = false;
 				
-				transTable.addTransaction(t);
-				break;
+				if(!transTable.containsTransaction(i.transactionId)) {
+					transTable.addTransaction(t);
+					waitingQueueList.put(i.transactionId, new WaitingQueue());
+					return true;
+				} else {
+					System.err.println("Already have a transaction: " + i.transactionId);
+					return false;
+				}
 			case BEGINRO:
 				// update trans table
 				Transaction tro = new Transaction();
@@ -151,21 +184,30 @@ public class TransactionManager {
 				tro.status = 1;
 				tro.readOnly = true;
 				
-				transTable.addTransaction(tro);
-				
-				sendAllSites("SNAPSHOT " + tro.timestamp.getTime());
-				break;
+				if(!transTable.containsTransaction(i.transactionId)) {
+					transTable.addTransaction(tro);				
+					waitingQueueList.put(i.transactionId, new WaitingQueue());
+					sendAllSites("SNAPSHOT " + tro.timestamp.getTime());
+					return true;
+				} else {
+					System.err.println("Already have a transaction: " + i.transactionId);
+					return false;
+				}				
 			case END:
 				// Two-phase commit:
 				// send message to all sites, get receipts
-				
-				sendAllSites("COMMIT " + i.transactionId);
-				
-				commitLog.add(new Integer(i.transactionId));
-				// if all are good to go, send message to commit
-				
-				// update trans table
-				break;
+				if(transTable.containsTransaction(i.transactionId)){
+					sendAllSites("COMMIT " + i.transactionId);
+					
+					commitLog.add(new Integer(i.transactionId));
+					// if all are good to go, send message to commit
+					
+					// 	update trans table					
+					return true;
+				} else {
+					System.err.println("Do not have a record for transaction: " + i.transactionId);
+					return false;
+				}
 			case DUMP:
 				// send message to applicable sites
 				String msg = "DUMP";
@@ -180,20 +222,24 @@ public class TransactionManager {
 						System.out.println(r);
 					}
 				}
-				break;
+				return true;
 			case FAIL:
 				// send message to applicable site
 				sendToSite(i.site, "FAIL");
-				break;
+				return true;
 			case RECOVER:
 				// send message to applicable site
 				sendToSite(i.site, "RECOVER");
-				break;
+				return true;
 			case RO:
 			case R:
 			case W:
 				// send message to applicable sites
 				// recieve receipt
+				if(!transTable.containsTransaction(i.transactionId)){
+					System.err.println("Do not have a record for transaction: " + i.transactionId);
+					return false;
+				}
 				int site = -1;
 				if(varLocations.containsKey(i.resource)) {
 					// TODO: check sitelist to make sure site  is up
@@ -207,12 +253,13 @@ public class TransactionManager {
 					if (site == -1) {
 						// all sites with the variable are failed
 						System.err.println("All sites are failed for resource: " + i.resource);
-						System.exit(-1);
+						System.err.println("Buffering command: " + i.originalInstruction);
+						return false;
 					}
 				}
 				else {
 					System.err.println("No site holds the resource: " + i.resource);
-					System.exit(-1);
+					return false;
 				}
 				
 				String command = "INSTR " + i.transactionId + " " + transTable.getTimestamp(i.transactionId).getTime() +
@@ -276,7 +323,9 @@ public class TransactionManager {
 					System.out.println(response);
 				}
 				
-				break;
+				return true;
+			default:
+				return false;
 		}		
 	}
 	
@@ -334,7 +383,7 @@ public class TransactionManager {
 		
 		List<ParsedInstrEnty> instrList = new ArrayList<ParsedInstrEnty>();
 		for(String m : msgs){
-		
+			boolean misformed = false;
 			String[] msg = m.trim().split("\\(|,|\\)");
 			
 			// clean whitespace, make each token upper case
@@ -356,14 +405,18 @@ public class TransactionManager {
 			case R:
 				pie.transactionId = new Integer(msg[1].substring(1));
 				pie.resource = msg[2];
-				if(transTable.TransactionList.get(pie.transactionId-1).readOnly) {
+				if(transTable.containsTransaction(pie.transactionId) &&
+					transTable.TransactionList.get(pie.transactionId-1).readOnly) {				
 					pie.opcode = OpCode.RO;
 				}
 				break;
 			case W:
 				pie.transactionId = new Integer(msg[1].substring(1));
 				pie.resource = msg[2];
-				pie.value = msg[3];
+				if(msg.length==4)
+					pie.value = msg[3];
+				else 
+					misformed = true;
 				break;
 			case FAIL:
 			case RECOVER:
@@ -385,7 +438,10 @@ public class TransactionManager {
 					}
 				}
 			}
-			instrList.add(pie);
+			if (!misformed)
+				instrList.add(pie);
+			else
+				System.err.println("Misformed command: " + pie.originalInstruction);
 		}
 		
 		
