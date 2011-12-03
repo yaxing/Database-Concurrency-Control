@@ -202,13 +202,16 @@ public class Site{
 	/**
 	 * write log to db,
 	 * clear recover locks
-	 * write commit log
+	 * unlock 
 	 * @param trasactionId
 	 * @return
 	 */
 	public String op_commit(int transacId) {
-		dataMng.commitT(transacId);
+		ArrayList<String> wroteResources = dataMng.commitT(transacId);
 		lockMng.unlockTransac(transacId);
+		for(String resName : wroteResources) {
+			lockMng.releaseRecoverLock(resName);
+		}
 		return "COMMIT_RESP 1";
 	}
 	

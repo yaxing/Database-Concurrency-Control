@@ -135,7 +135,6 @@ public class LockManager {
 		else if(recoverLocks.containsKey(res)) {
 			if(requestLockType == LockType.WRITE) {
 				newLock(transacId, res, requestLockType);
-				recoverLocks.remove(res);
 				return null;
 			}
 			else {
@@ -214,6 +213,10 @@ public class LockManager {
 	 */
 	public void recoverLock(String res) {
 		recoverLocks.put(res, -1);
+	}
+	
+	public void releaseRecoverLock(String res) {
+		recoverLocks.remove(res);
 	}
 	
 	/**

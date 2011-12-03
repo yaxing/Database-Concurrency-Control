@@ -179,16 +179,18 @@ public class DataManager {
 	 * @param transacId
 	 * @return
 	 */
-	public boolean commitT(int transacId) {
+	public ArrayList<String> commitT(int transacId) {
 		ArrayList<TransactionLogItemEnty> writeLog = transactionLog.get(transacId);
+		ArrayList<String> wroteResources = new ArrayList<String>();
 		if(writeLog == null || writeLog.size() == 0) {
-			return true;
+			return wroteResources;
 		}
 		for(TransactionLogItemEnty log : writeLog) {
 			db.put(log.resource, log.value);
+			wroteResources.add(log.resource);
 		}
-		transactionLog.remove(transactionLog);
-		return true;
+		transactionLog.remove(transacId);
+		return wroteResources;
 	}
 
 	/**
