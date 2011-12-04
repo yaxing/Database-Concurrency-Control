@@ -220,6 +220,7 @@ public class TransactionManager {
 				// send message to all sites, get receipts
 				if(transTable.containsTransaction(i.transactionId)){
 					sendAllSites("COMMIT " + i.transactionId);
+					clearVisitorsByTransId(i.transactionId);
 					
 					commitLog.add(new Integer(i.transactionId));
 					// if all are good to go, send message to commit
@@ -239,9 +240,11 @@ public class TransactionManager {
 				}
 				else {
 					List<String> result = sendAllSites(msg);
+					int siteI = 1;
 					for(String r: result)
 					{
-						System.out.println(r);
+						System.out.println("Site " + siteI + ": " + r);
+						siteI++;
 					}
 				}
 				return true;
@@ -340,6 +343,7 @@ public class TransactionManager {
 							// abort req
 							System.out.println("ABORT " + reqID);
 							sendAllSites("ABORT " + reqID);
+							clearVisitorsByTransId(reqID);
 							transTable.setStatus(reqID, -1);
 							return true;
 						} else {
@@ -414,6 +418,7 @@ public class TransactionManager {
 										// abort req
 										System.out.println("ABORT " + reqID);
 										sendAllSites("ABORT " + reqID);
+										clearVisitorsByTransId(reqID);
 										transTable.setStatus(reqID, -1);
 										return true;
 									} else {
@@ -450,10 +455,28 @@ public class TransactionManager {
 	}
 	
 	private void failVisitors(int site) {
+		List<Integer> abortedTransactions = new ArrayList<Integer>();
 		for(Integer i : visitorList.get(site-1)) {
 			sendAllSites("ABORT " + i);
+			abortedTransactions.add(i);
+		}
+		for(Integer a : abortedTransactions){
+			clearVisitorsByTransId(a);
 		}
 	}
+	
+	private void clearVisitorsByTransId(int transID) {
+		for(ArrayList<Integer> vl : visitorList) {
+			int counter = 0;
+			for (;counter<vl.size(); counter++) {
+				if(vl.get(counter) == transID) {
+					vl.remove(counter);
+					counter=-1;
+				}
+			}
+		}
+	}
+
 
 	/**
 	 * 
