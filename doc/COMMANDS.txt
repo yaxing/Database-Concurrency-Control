@@ -31,7 +31,7 @@ INIT X1:19 X2:12:UNIQ X6:15
 
 
 Site => TM
-1. execution response EXE_RESP 1/0/-1 [{T_NAME_HOLDER,T_NAME_HOLDER...}] [T_NAME_REQ] [V_NAME:V_VALUE]
+1. execution response EXE_RESP 1/0/-1/-2 [{T_NAME_HOLDER,T_NAME_HOLDER...}] [T_NAME_REQ] [V_NAME:V_VALUE]
 
 Successful:
  EXE_RESP 1
@@ -46,6 +46,9 @@ Failed:
        
  c. Site failure
        EXE_RESP -1
+ 
+ d. Resource not existed
+ 	   EXE_RESP -2 
 
 Read:
  EXE_RESP X3:22
