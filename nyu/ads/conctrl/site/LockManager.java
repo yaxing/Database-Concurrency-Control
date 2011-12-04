@@ -185,7 +185,7 @@ public class LockManager {
 	 */
 	public void unlockTransac(int transacId) {
 		Iterator<Map.Entry<String, ArrayList<LockEnty>>> locksIt = locks.entrySet().iterator();
-		
+		ArrayList<String> txRemoveList = new ArrayList<String>();
 		while(locksIt.hasNext()) {
 			Map.Entry<String, ArrayList<LockEnty>> entry = (Map.Entry<String, ArrayList<LockEnty>>)locksIt.next();
 			ArrayList<LockEnty> lockInfo = entry.getValue();
@@ -196,14 +196,15 @@ public class LockManager {
 					lockInfo.remove(counter);
 					counter = -1;
 					if(lockInfo.isEmpty()) {
-						locks.remove(entry.getKey());
+						txRemoveList.add(entry.getKey());
 						break;
 					}
 				}
 			}
-			if(locks.isEmpty()) {
-				break;
-			}
+		}
+		
+		for(String del : txRemoveList) {
+			locks.remove(del);
 		}
 	}
 	
