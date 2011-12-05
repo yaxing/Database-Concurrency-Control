@@ -219,6 +219,8 @@ public class TransactionManager {
 				// Two-phase commit:
 				// send message to all sites, get receipts
 				if(transTable.containsTransaction(i.transactionId)){
+					sendAllSites("PREPARE_COMMIT " + i.transactionId);
+					
 					sendAllSites("COMMIT " + i.transactionId);
 					clearVisitorsByTransId(i.transactionId);
 					
