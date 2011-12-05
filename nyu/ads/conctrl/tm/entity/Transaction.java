@@ -11,7 +11,7 @@ import nyu.ads.conctrl.entity.*;
 public class Transaction {
 	public int transID;
 	public TimeStamp timestamp;
-	public int status;
+	public int status;	// 0 for committed, 1 for running, -1 for aborted
 	public Boolean readOnly;
 	public Boolean shouldAbort;
 	
