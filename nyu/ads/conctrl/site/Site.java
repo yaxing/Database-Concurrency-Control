@@ -201,7 +201,7 @@ public class Site{
 	
 	public String op_commit_query(int transactionId) {
 		
-		return null;
+		return InstrCode.PREPARE_COMMIT + " 1";
 	}
 	
 	/**
