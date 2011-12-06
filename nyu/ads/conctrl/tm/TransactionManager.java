@@ -142,12 +142,14 @@ public class TransactionManager {
 	}
 
 	/**
-	 * Initialize the variable lists at the sites
+	 * Initialize the variable lists at the sites. Sites are stored in the file "sites" in the following format
+	 * <site number> <variable name>:<inital value>[:UNIQ] | ...
+	 * UNIQ is appended if the variable is unique, as in the variable only occurs on that site
 	 */
 	public void initSites() {
 		// init sites
 		try {
-			File sitesFile = new File("src/sites");
+			File sitesFile = new File("sites");
 			Scanner sc = new Scanner(sitesFile);
 			sc.useDelimiter(System.getProperty("line.separator"));
 			while(sc.hasNext()){
@@ -175,6 +177,12 @@ public class TransactionManager {
 		}		
 	}
 	
+	/**
+	 * Helper method for initSites method. Will add the list of variables
+	 * to the specified site as represented by varLocations
+	 * @param variables
+	 * @param site
+	 */
 	public void addVariableLocations(String[] variables, int site) {
 		for (int i = 0; i < variables.length; i++) {
 			if (varLocations.containsKey(variables[i])) {
@@ -219,6 +227,12 @@ public class TransactionManager {
 		}		
 	}
 	
+	/**
+	 * Method to handle our helper function trans(), which will display the current status of 
+	 * the transaction table. Can also pass a number to check a specific transaction. 
+	 * @param i
+	 * @return
+	 */
 	private int op_trans(ParsedInstrEnty i) {
 		if(i.transactionId == -1) {
 			for (Transaction t : transTable.TransactionList) {
@@ -250,6 +264,15 @@ public class TransactionManager {
 		return 0;
 	}
 
+	/**
+	 * Method to handle the read and readRO command
+	 * Will find a site that is currently up that holds the requested variable.
+	 * If that variable has a recover lock on it at a site, try the next site on the list.
+	 * Print out the read value of the requested variable.
+	 * If the variable has already been locked, perform the wait-die procedure
+	 * @param i
+	 * @return
+	 */
 	private int op_read(ParsedInstrEnty i) {
 		// send message to applicable sites
 		// recieve receipt
@@ -356,6 +379,13 @@ public class TransactionManager {
 		}
 	}
 
+	/**
+	 * Method to abort transactions
+	 * Will abort the transaction, and log the reason in the Transaction table why the transaction was aborted.
+	 * Send the abort command for the transaction to all sites.
+	 * @param reqID
+	 * @param reason
+	 */
 	private void op_abort(int reqID, String reason) {
 		// abort req
 		System.out.println("TRANSACTION T"+reqID+" ABORTS " + " (" + reason + ")");
@@ -363,10 +393,16 @@ public class TransactionManager {
 		transTable.setStatus(reqID, -1);
 		transTable.setFailReason(reqID, reason);
 	}
-
+	
+	/**
+	 * Method to handle a write instruction
+	 * Make sure at least one site that has the variable is available.
+	 * Send the write command to all available sites.
+	 * If the variable is locked, perform the wait-die procedure.
+	 * @param i
+	 * @return
+	 */
 	private int op_write(ParsedInstrEnty i) {
-		// send message to applicable sites
-		// recieve receipt
 		if(!transTable.containsTransaction(i.transactionId)){
 			System.out.println("ERROR: Do not have a record for transaction: " + i.transactionId);
 			return -1;
@@ -467,12 +503,25 @@ public class TransactionManager {
 		return 0;
 	}
 
+	/**
+	 * Method to handle the recover command
+	 * Sends the recover command to the site
+	 * @param i
+	 * @return
+	 */
 	private int op_recover(ParsedInstrEnty i) {
 		// send message to applicable site
 		sendToSite(i.site, "RECOVER");
 		return 0;
 	}
 
+	/**
+	 * Method to handle the fail command
+	 * Sends the fail command to the site
+	 * Aborts all transactions that have visited this site
+	 * @param i
+	 * @return
+	 */
 	private int op_fail(ParsedInstrEnty i) {
 		// send message to applicable site
 		sendToSite(i.site, "FAIL");
@@ -480,6 +529,13 @@ public class TransactionManager {
 		return 0;
 	}
 
+	/**
+	 * Method to handle the dump command
+	 * Send the dump command to the correct sites
+	 * Prints out the dumped values
+	 * @param i
+	 * @return
+	 */
 	private int op_dump(ParsedInstrEnty i) {
 		// send message to applicable sites
 		String msg = "DUMP";
@@ -490,8 +546,9 @@ public class TransactionManager {
 		else {
 			List<String> result = sendAllSites(msg);
 			int siteI = 1;
-			for(String r: result)
+			for(String r : result)
 			{
+				
 				System.out.println("Site " + siteI + ": " + r);
 				siteI++;
 			}
