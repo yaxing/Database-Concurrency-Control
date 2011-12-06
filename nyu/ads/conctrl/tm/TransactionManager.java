@@ -32,7 +32,7 @@ public class TransactionManager {
 	
 	public static Boolean DEBUG = true; 
 	
-	public static Boolean BUFFER = false;
+	public static Boolean BUFFER = true;
 	
 	/**
 	 * Default constructor. Initializes all member variables.
@@ -98,11 +98,11 @@ public class TransactionManager {
 					workToDo = false;
 					// try to process the first one
 					if (BUFFER)
-						System.err.println("Attempting to process buffered command: " + pairs.getValue().viewFirst());
+						System.out.println("WARNING: Attempting to process buffered command: " + pairs.getValue().viewFirst());
 					int result = transManager.process(pairs.getValue().viewFirst());
 					if(result == 0){
 						if (BUFFER)
-							System.err.println("Buffered command processed successfully: " + pairs.getValue().viewFirst());
+							System.out.println("WARNING: Buffered command processed successfully: " + pairs.getValue().viewFirst());
 						int i = pairs.getValue().viewFirst().transactionId;
 						pairs.getValue().dequeue();
 						transactionsProcessed.add(i);
@@ -119,7 +119,7 @@ public class TransactionManager {
 						transManager.waitingQueueList.get(i.transactionId).isBlocked()){
 					transManager.waitingQueueList.get(i.transactionId).enqueue(i);
 					if (BUFFER)
-						System.err.println("Transaction already has buffered commands, buffering command: " + i.originalInstruction);
+						System.out.println("WARNING: Transaction already has buffered commands, buffering command: " + i.originalInstruction);
 				}
 				else 
 				{
@@ -228,12 +228,12 @@ public class TransactionManager {
 				} else if (t.status == 1) {
 					System.out.println("RUNNING");
 				} else {
-					System.out.println("ABORTED");
+					System.out.println("ABORTED (" + transTable.getReason(t.transID) + ")");
 				}
 			}
 		} else {
 			if (!transTable.containsTransaction(i.transactionId)) {
-				System.err.println("No such transaction: " + i.transactionId);
+				System.out.println("ERROR: No such transaction: " + i.transactionId);
 				return -1;
 			}
 			
@@ -254,7 +254,7 @@ public class TransactionManager {
 		// send message to applicable sites
 		// recieve receipt
 		if(!transTable.containsTransaction(i.transactionId)){
-			System.err.println("Do not have a record for transaction: " + i.transactionId);
+			System.out.println("ERROR: Do not have a record for transaction: " + i.transactionId);
 			return -1;
 		}
 		int site = -1;
@@ -275,15 +275,15 @@ public class TransactionManager {
 					
 					if (result.equals("-1")) {
 						// site has failed 
-						System.err.println("Sent command to failed site. Shouldn't ever get here.");
-						System.err.println("Command: " + i.originalInstruction);
+						System.out.println("Sent command to failed site. Shouldn't ever get here.");
+						System.out.println("Command: " + i.originalInstruction);
 						System.exit(-1);
 					}
 					else if (result.equals("0"))
 					{
 						// could not acquire lock
 						if(resp.length == 2) {
-							System.err.println("Could not read, there is a recover lock: " + i.originalInstruction);
+							System.out.println("ERROR: Could not read, there is a recover lock at site " + site + ": " + i.originalInstruction);
 							continue;
 						}
 						else {
@@ -303,23 +303,25 @@ public class TransactionManager {
 							
 							int reqID = new Integer(resp[3]);
 							TimeStamp oldestHolderTimestamp = transTable.getTimestamp(holderID[0]);
+							int oldestHolderID = holderID[0];
 							for(int ho : holderID) {
 								TimeStamp holderTimestamp = transTable.getTimestamp(ho);
 								if (holderTimestamp.before(oldestHolderTimestamp)) {
 									oldestHolderTimestamp = holderTimestamp;
+									oldestHolderID = ho;
 								}
 							}
 							TimeStamp reqTimestamp = transTable.getTimestamp(reqID);
 							
 							if (oldestHolderTimestamp.before(reqTimestamp)) {
-								op_abort(reqID);
+								op_abort(reqID, "Conflict with Transaction T" + oldestHolderID);
 								clearVisitorsByTransId(reqID);
 								return 0;
 							} else {
 								// Buffer request
-								System.err.println("Transaction is requesting lock but it is held by a younger transaction.");
+								System.out.println("WARNING: Transaction is requesting lock but it is held by a younger transaction.");
 								if (BUFFER)
-									System.err.println("Buffering command: " + i.originalInstruction);
+									System.out.println("WARNING: Buffering command: " + i.originalInstruction);
 								return 1;						
 							}					
 						}
@@ -336,36 +338,37 @@ public class TransactionManager {
 			}
 			if (site == -1) {
 				// all sites with the variable are failed
-				System.err.println("All sites are failed for resource: " + i.resource);
+				System.out.println("WARNING: All sites are failed for resource: " + i.resource);
 				if (BUFFER)
-					System.err.println("Buffering command: " + i.originalInstruction);
+					System.out.println("WARNING: Buffering command: " + i.originalInstruction);
 				return 1;
 			}
 			else {
-				System.err.println("All sites have recover lock for resource: " + i.resource);
+				System.out.println("WARNING: All sites have recover lock for resource: " + i.resource);
 				if (BUFFER)
-					System.err.println("Buffering command: " + i.originalInstruction);
+					System.out.println("WARNING: Buffering command: " + i.originalInstruction);
 				return 1;
 			}
 		}
 		else {
-			System.err.println("No site holds the resource: " + i.resource);
+			System.out.println("ERROR: No site holds the resource: " + i.resource);
 			return -1;
 		}
 	}
 
-	private void op_abort(int reqID) {
+	private void op_abort(int reqID, String reason) {
 		// abort req
-		System.out.println("TRANSACTION T"+reqID+" ABORTS");
+		System.out.println("TRANSACTION T"+reqID+" ABORTS " + " (" + reason + ")");
 		sendAllSites("ABORT " + reqID);
 		transTable.setStatus(reqID, -1);
+		transTable.setFailReason(reqID, reason);
 	}
 
 	private int op_write(ParsedInstrEnty i) {
 		// send message to applicable sites
 		// recieve receipt
 		if(!transTable.containsTransaction(i.transactionId)){
-			System.err.println("Do not have a record for transaction: " + i.transactionId);
+			System.out.println("ERROR: Do not have a record for transaction: " + i.transactionId);
 			return -1;
 		}
 		boolean canWrite = false;
@@ -381,14 +384,14 @@ public class TransactionManager {
 			}
 			if (!canWrite) {
 				// all sites with the variable are failed
-				System.err.println("All sites are failed for resource: " + i.resource);
+				System.out.println("WARNING: All sites are failed for resource: " + i.resource);
 				if (BUFFER)
-					System.err.println("Buffering command: " + i.originalInstruction);
+					System.out.println("WARNING: Buffering command: " + i.originalInstruction);
 				return 1;
 			}
 		}
 		else {
-			System.err.println("No site holds the resource: " + i.resource);
+			System.out.println("ERROR: No site holds the resource: " + i.resource);
 			return -1;
 		}
 		
@@ -436,24 +439,26 @@ public class TransactionManager {
 				
 				int reqID = new Integer(resp[3]);
 				TimeStamp oldestHolderTimestamp = transTable.getTimestamp(holderID[0]);
+				int oldestHolderID = holderID[0];
 				for(int ho : holderID) {
 					TimeStamp holderTimestamp = transTable.getTimestamp(ho);
 					if (holderTimestamp.before(oldestHolderTimestamp)) {
 						oldestHolderTimestamp = holderTimestamp;
+						oldestHolderID = ho;
 					}
 				}
 				TimeStamp reqTimestamp = transTable.getTimestamp(reqID);
 				
 				if (oldestHolderTimestamp.before(reqTimestamp)) {
 					// abort req
-					op_abort(reqID);
+					op_abort(reqID, "Conflict with Transaction T" + oldestHolderID);
 					clearVisitorsByTransId(reqID);
 					return 0;
 				} else {
 					// Buffer request
-					System.err.println("Transaction is requesting lock but it is held by a younger transaction.");
+					System.out.println("WARNING: Transaction is requesting lock but it is held by a younger transaction.");
 					if (BUFFER)
-						System.err.println("Buffering command: " + i.originalInstruction);
+						System.out.println("WARNING: Buffering command: " + i.originalInstruction);
 					return 1;						
 				}
 			}
@@ -512,13 +517,13 @@ public class TransactionManager {
 			return 0;
 		} else if (transTable.containsTransaction(i.transactionId)) {
 			if (transTable.getStatus(i.transactionId) == 0) {
-				System.err.println("Transaction has already been committed: " + i.transactionId);
+				System.out.println("WARNING: Transaction has already been committed: " + i.transactionId);
 			} else {
-				System.err.println("Transaction has already been aborted: " + i.transactionId);
+				System.out.println("WARNING: Transaction has already been aborted: " + i.transactionId + " (" + transTable.getReason(i.transactionId) + ")");
 			}
 			return -1;
 		}	else {
-			System.err.println("Do not have a record for transaction: " + i.transactionId);
+			System.out.println("ERROR: Do not have a record for transaction: " + i.transactionId);
 			return -1;
 		}
 	}
@@ -537,7 +542,7 @@ public class TransactionManager {
 			sendAllSites("SNAPSHOT " + tro.timestamp.getTime());
 			return 0;
 		} else {
-			System.err.println("Already have a transaction: " + i.transactionId);
+			System.out.println("ERROR: Already have a transaction: " + i.transactionId);
 			return -1;
 		}
 	}
@@ -555,7 +560,7 @@ public class TransactionManager {
 			waitingQueueList.put(i.transactionId, new WaitingQueue());
 			return 0;
 		} else {
-			System.err.println("Already have a transaction: " + i.transactionId);
+			System.out.println("ERROR: Already have a transaction: " + i.transactionId);
 			return -1;
 		}
 	}
@@ -563,7 +568,7 @@ public class TransactionManager {
 	private void failVisitors(int site) {
 		List<Integer> abortedTransactions = new ArrayList<Integer>();
 		for(Integer i : visitorList.get(site-1)) {
-			op_abort(i);
+			op_abort(i, "Site " + site + " failed");
 		}
 		for(Integer a : abortedTransactions){
 			clearVisitorsByTransId(a);
@@ -596,8 +601,8 @@ public class TransactionManager {
 		String result = siteList.get(site-1).process();
 		
 		if (DEBUG) {
-			System.out.println("**DEBUG** Site={" + site + "} Command=\"" + command + "\"");			
-			System.out.println("**DEBUG** Result=\"" + result + "\"");
+			System.out.println("DEBUG: Sending site={" + site + "} Command=\"" + command + "\"");			
+			System.out.println("DEBUG: Result=\"" + result + ";\"");
 		}
 		return result;
 	}
@@ -615,12 +620,12 @@ public class TransactionManager {
 		for(int i = 0; i < siteList.size(); i++) {
 			siteList.get(i).setBuffer(command);
 			responseList.add(siteList.get(i).process());
-			result += responseList.get(i);
+			result += responseList.get(i) + "; ";
 		}
 		
 		if (DEBUG) {
-			System.out.println("**DEBUG** Site={all} Command=\"" + command + "\"");			
-			System.out.println("**DEBUG** Result=\"" + result + "\"");
+			System.out.println("DEBUG: Sending site={all} Command=\"" + command + "\"");			
+			System.out.println("DEBUG: Result=\"" + result + "\"");
 		}
 		
 		return responseList;
@@ -707,9 +712,12 @@ public class TransactionManager {
 						}
 						break;
 				}
-				instrList.add(pie);
+				if(!misformed)
+					instrList.add(pie);
+				else
+					System.out.println("ERROR: Misformed command: " + m);
 			} catch (Exception e) {
-				System.err.println("Misformed command: " + m);
+				System.out.println("ERROR: Misformed command: " + m);
 			}			
 		}
 		

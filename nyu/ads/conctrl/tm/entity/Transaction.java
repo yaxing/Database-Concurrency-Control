@@ -14,6 +14,7 @@ public class Transaction {
 	public int status;	// 0 for committed, 1 for running, -1 for aborted
 	public Boolean readOnly;
 	public Boolean shouldAbort;
+	public String failReason;
 	
 	public Transaction() {}
 	
@@ -24,12 +25,13 @@ public class Transaction {
 	 * @param status
 	 * @param readOnly
 	 */
-	public Transaction(int transID, TimeStamp timestamp, int status, Boolean readOnly) {
+	public Transaction(int transID, TimeStamp timestamp, int status, Boolean readOnly, String failReason) {
 		super();
 		this.transID = transID;
 		this.timestamp = timestamp;
 		this.status = status;
 		this.readOnly = readOnly;
 		this.shouldAbort = false;
+		this.failReason = failReason;
 	}
 }

@@ -86,11 +86,30 @@ public class TransactionTable {
 		return -1;
 	}
 	
+	public String getReason(int transId)
+	{
+		for (Transaction t : TransactionList) {
+			if (t.transID == transId) {
+				return t.failReason;
+			}
+		}
+		return "";
+	}
+	
 	public void setStatus(int transId, int status)
 	{
 		for (Transaction t: TransactionList) {
 			if(t.transID == transId) {
 				t.status = status;
+			}
+		}
+	}
+	
+	public void setFailReason(int transId, String reason)
+	{
+		for (Transaction t: TransactionList) {
+			if(t.transID == transId) {
+				t.failReason = reason;
 			}
 		}
 	}
