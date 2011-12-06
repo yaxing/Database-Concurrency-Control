@@ -24,6 +24,11 @@ public class TransactionTable {
 		TransactionList = new ArrayList<Transaction>();
 	}
 	
+	/**
+	 * Returns whether the transaction is held or not
+	 * @param transID
+	 * @return
+	 */
 	public boolean containsTransaction(int transID)
 	{
 		for (Transaction t : TransactionList) {
@@ -86,6 +91,11 @@ public class TransactionTable {
 		return -1;
 	}
 	
+	/**
+	 * Get the reason that the transaction failed
+	 * @param transId
+	 * @return
+	 */
 	public String getReason(int transId)
 	{
 		for (Transaction t : TransactionList) {
@@ -96,6 +106,11 @@ public class TransactionTable {
 		return "";
 	}
 	
+	/**
+	 * Set the status for a transaction
+	 * @param transId
+	 * @param status
+	 */
 	public void setStatus(int transId, int status)
 	{
 		for (Transaction t: TransactionList) {
@@ -105,6 +120,11 @@ public class TransactionTable {
 		}
 	}
 	
+	/**
+	 * Set the failure reason for the transaction
+	 * @param transId
+	 * @param reason
+	 */
 	public void setFailReason(int transId, String reason)
 	{
 		for (Transaction t: TransactionList) {

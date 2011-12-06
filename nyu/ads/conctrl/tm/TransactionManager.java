@@ -10,7 +10,7 @@ import nyu.ads.conctrl.tm.entity.*;
 /**
  * Transaction Manager class
  * 
- * @author Matt
+ * @author Matt Sarnak
  *
  */
 public class TransactionManager {
@@ -28,7 +28,7 @@ public class TransactionManager {
 	
 	public List<ArrayList<Integer>> visitorList;
 	
-	public List<Integer> commitLog; // List of committed transactions
+	//public List<Integer> commitLog; // List of committed transactions
 	
 	public static Boolean DEBUG = true; 
 	
@@ -43,7 +43,6 @@ public class TransactionManager {
 		//varList = new ArrayList<Resource>();
 		waitingQueueList = new HashMap<Integer, WaitingQueue>();
 		varLocations = new HashMap<String, List<Integer>>();
-		commitLog = new ArrayList<Integer>();
 		visitorList = new ArrayList<ArrayList<Integer>>();
 	}
 	
@@ -556,6 +555,13 @@ public class TransactionManager {
 		return 0;
 	}
 
+	/**
+	 * Method to handle the end command
+	 * Perform two-phase commit.
+	 * Update the transaction table.
+	 * @param i
+	 * @return
+	 */
 	private int op_end(ParsedInstrEnty i) {
 		// Two-phase commit:
 		// send message to all sites, get receipts
@@ -565,8 +571,6 @@ public class TransactionManager {
 			// if all are good to go, send message to commit
 			sendAllSites("COMMIT " + i.transactionId);
 			clearVisitorsByTransId(i.transactionId);
-			
-			commitLog.add(new Integer(i.transactionId));
 								
 			// 	update trans table
 			transTable.setStatus(i.transactionId, 0);
@@ -585,6 +589,13 @@ public class TransactionManager {
 		}
 	}
 
+	/**
+	 * Method to handle the beginRO command
+	 * Create a new transaction, and add it to the transaction table
+	 * Send a snapshot command to all sites so that they can perform multi-version read consistency
+	 * @param i
+	 * @return
+	 */
 	private int op_beginRO(ParsedInstrEnty i) {
 		// update trans table
 		Transaction tro = new Transaction();
@@ -604,6 +615,12 @@ public class TransactionManager {
 		}
 	}
 
+	/**
+	 * Method to handle the begin command
+	 * Create a new transaction and add it to the transaction table
+	 * @param i
+	 * @return
+	 */
 	private int op_begin(ParsedInstrEnty i) {
 		// update trans table
 		Transaction t = new Transaction();
@@ -622,6 +639,11 @@ public class TransactionManager {
 		}
 	}
 	
+	/**
+	 * Method to fail the visitors of a failed site
+	 * Go through the list of all visiting transactions of the site and abort each one
+	 * @param site
+	 */
 	private void failVisitors(int site) {
 		List<Integer> abortedTransactions = new ArrayList<Integer>();
 		for(Integer i : visitorList.get(site-1)) {
@@ -632,6 +654,12 @@ public class TransactionManager {
 		}
 	}
 	
+	/**
+	 * Helper function
+	 * After ending a transaction for any reason, clear out that transaction from any 
+	 * site's visitor list 
+	 * @param transID
+	 */
 	private void clearVisitorsByTransId(int transID) {
 		for(ArrayList<Integer> vl : visitorList) {
 			int counter = 0;
@@ -646,7 +674,8 @@ public class TransactionManager {
 
 
 	/**
-	 * 
+	 * Method to send a command to a site
+	 * Takes the command and send it to a specific site, returning the result
 	 * @param site
 	 * @param command
 	 * @return
@@ -665,7 +694,7 @@ public class TransactionManager {
 	}
 	
 	/**
-	 * Sends all sites the same command, and returns the list of the repsonses
+	 * Sends all sites the same command, and returns the list of the responses
 	 * @param command
 	 * @return response list
 	 */

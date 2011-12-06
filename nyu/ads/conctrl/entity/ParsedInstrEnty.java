@@ -2,7 +2,7 @@ package nyu.ads.conctrl.entity;
 
 /**
  * An entity to represent the parsed Instruction
- * @author Matt
+ * @author Matt Sarnak
  *
  */
 public class ParsedInstrEnty {
