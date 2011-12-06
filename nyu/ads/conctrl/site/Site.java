@@ -72,7 +72,7 @@ public class Site{
 			op_fail();
 			break;
 		case RECOVER:
-			op_recover();
+			result = op_recover();
 			break;
 		case INIT:
 			op_init_res(msg);
@@ -102,31 +102,18 @@ public class Site{
 	 * require recover lock for all replicated resources
 	 * abort all uncommitted transactions
 	 */
-	public void op_recover() {
+	public String op_recover() {
 		this.status = 1;
 		ArrayList<String> nonUniq = dataMng.getReplicatedResource();
 		for(String res : nonUniq) {
 			lockMng.recoverLock(res);
 		}
 		dataMng.abortAllTx();
+		return "RECOVER_RESP 1";
 	}
 	
 	public int getStatus() {
 		return this.status;
-	}
-	
-	/**
-	 * dump all information on this site, 
-	 * including all locks, resources, status, etc.
-	 * encapsulated as an object and return to TM
-	 * @return SiteQueryEnty query result obj
-	 */
-	public SiteQueryEnty query() {
-		SiteQueryEnty enty = new SiteQueryEnty();
-		/*
-		 * query code
-		 */
-		return enty;
 	}
 	
 	/**
@@ -229,7 +216,7 @@ public class Site{
 	public String op_abort(int transactionId) {
 		lockMng.unlockTransac(transactionId);
 		dataMng.abortT(transactionId);
-		return null;
+		return "ABORT_RESP " + transactionId;
 	}
 	
 	public String op_dump(String resName) {
