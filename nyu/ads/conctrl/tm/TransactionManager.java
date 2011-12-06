@@ -232,7 +232,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	private int op_trans(ParsedInstrEnty i) {
+	public int op_trans(ParsedInstrEnty i) {
 		if(i.transactionId == -1) {
 			for (Transaction t : transTable.TransactionList) {
 				System.out.print("T" + t.transID + ": ");
@@ -272,7 +272,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	private int op_read(ParsedInstrEnty i) {
+	public int op_read(ParsedInstrEnty i) {
 		// send message to applicable sites
 		// recieve receipt
 		if(!transTable.containsTransaction(i.transactionId)){
@@ -385,7 +385,7 @@ public class TransactionManager {
 	 * @param reqID
 	 * @param reason
 	 */
-	private void op_abort(int reqID, String reason) {
+	public void op_abort(int reqID, String reason) {
 		// abort req
 		System.out.println("TRANSACTION T"+reqID+" ABORTS " + " (" + reason + ")");
 		sendAllSites("ABORT " + reqID);
@@ -401,7 +401,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	private int op_write(ParsedInstrEnty i) {
+	public int op_write(ParsedInstrEnty i) {
 		if(!transTable.containsTransaction(i.transactionId)){
 			System.out.println("ERROR: Do not have a record for transaction: " + i.transactionId);
 			return -1;
@@ -508,7 +508,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	private int op_recover(ParsedInstrEnty i) {
+	public int op_recover(ParsedInstrEnty i) {
 		// send message to applicable site
 		sendToSite(i.site, "RECOVER");
 		return 0;
@@ -521,7 +521,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	private int op_fail(ParsedInstrEnty i) {
+	public int op_fail(ParsedInstrEnty i) {
 		// send message to applicable site
 		sendToSite(i.site, "FAIL");
 		failVisitors(i.site);
@@ -535,7 +535,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	private int op_dump(ParsedInstrEnty i) {
+	public int op_dump(ParsedInstrEnty i) {
 		// send message to applicable sites
 		String msg = "DUMP";
 		if(i.resource != null) {  msg += " " + i.resource; }
@@ -562,7 +562,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	private int op_end(ParsedInstrEnty i) {
+	public int op_end(ParsedInstrEnty i) {
 		// Two-phase commit:
 		// send message to all sites, get receipts
 		if(transTable.containsTransaction(i.transactionId) && transTable.getStatus(i.transactionId) == 1){
@@ -596,7 +596,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	private int op_beginRO(ParsedInstrEnty i) {
+	public int op_beginRO(ParsedInstrEnty i) {
 		// update trans table
 		Transaction tro = new Transaction();
 		tro.transID = i.transactionId;
@@ -621,7 +621,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	private int op_begin(ParsedInstrEnty i) {
+	public int op_begin(ParsedInstrEnty i) {
 		// update trans table
 		Transaction t = new Transaction();
 		t.transID = i.transactionId;
@@ -644,7 +644,7 @@ public class TransactionManager {
 	 * Go through the list of all visiting transactions of the site and abort each one
 	 * @param site
 	 */
-	private void failVisitors(int site) {
+	public void failVisitors(int site) {
 		List<Integer> abortedTransactions = new ArrayList<Integer>();
 		for(Integer i : visitorList.get(site-1)) {
 			op_abort(i, "Site " + site + " failed");
@@ -660,7 +660,7 @@ public class TransactionManager {
 	 * site's visitor list 
 	 * @param transID
 	 */
-	private void clearVisitorsByTransId(int transID) {
+	public void clearVisitorsByTransId(int transID) {
 		for(ArrayList<Integer> vl : visitorList) {
 			int counter = 0;
 			for (;counter<vl.size(); counter++) {
