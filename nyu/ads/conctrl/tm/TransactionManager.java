@@ -20,7 +20,7 @@ public class TransactionManager {
 	
 	public List<Site> siteList; // list of sites
 	
-	public List<Resource> varList; // List of variables, and latest timestamp 
+	//public List<Resource> varList; // List of variables, and latest timestamp 
 	
 	public Map<String, List<Integer>> varLocations;
 	
@@ -30,7 +30,7 @@ public class TransactionManager {
 	
 	public List<Integer> commitLog; // List of committed transactions
 	
-	public static Boolean DEBUG = false; 
+	public static Boolean DEBUG = true; 
 	
 	public static Boolean BUFFER = false;
 	
@@ -40,7 +40,7 @@ public class TransactionManager {
 	public TransactionManager() {
 		transTable = new TransactionTable();
 		siteList = new ArrayList<Site>();
-		varList = new ArrayList<Resource>();
+		//varList = new ArrayList<Resource>();
 		waitingQueueList = new HashMap<Integer, WaitingQueue>();
 		varLocations = new HashMap<String, List<Integer>>();
 		commitLog = new ArrayList<Integer>();
@@ -63,7 +63,7 @@ public class TransactionManager {
 		// get line of user input
 		inputLine = inputScanner.next();
 		
-		while(!inputLine.equalsIgnoreCase("exit")) {
+		while(!inputLine.equalsIgnoreCase("exit") && !inputLine.equalsIgnoreCase("exit()")) {
 			// set the new current time stamp
 			transManager.currentTimestamp = new TimeStamp();
 			
@@ -212,9 +212,42 @@ public class TransactionManager {
 			case RO:
 			case R:
 				return op_read(i);
+			case TRANS:
+				return op_trans(i);
 			default:
 				return -1;
 		}		
+	}
+	
+	private int op_trans(ParsedInstrEnty i) {
+		if(i.transactionId == -1) {
+			for (Transaction t : transTable.TransactionList) {
+				System.out.print("T" + t.transID + ": ");
+				if(t.status == 0) {
+					System.out.println("COMMITTED");
+				} else if (t.status == 1) {
+					System.out.println("RUNNING");
+				} else {
+					System.out.println("ABORTED");
+				}
+			}
+		} else {
+			if (!transTable.containsTransaction(i.transactionId)) {
+				System.err.println("No such transaction: " + i.transactionId);
+				return -1;
+			}
+			
+			System.out.print("T" + i.transactionId + ": ");			
+			if(transTable.getStatus(i.transactionId) == 0) {
+				System.out.println("COMMITTED");
+			} else if (transTable.getStatus(i.transactionId) == 1) {
+				System.out.println("RUNNING");
+			} else {
+				System.out.println("ABORTED");
+			}
+		}
+		
+		return 0;
 	}
 
 	private int op_read(ParsedInstrEnty i) {
@@ -619,8 +652,6 @@ public class TransactionManager {
 			}
 			
 			try {
-				
-			
 				OpCode op  = OpCode.valueOf(msg[0]);
 				ParsedInstrEnty pie = new ParsedInstrEnty();
 				pie.opcode = op;
@@ -666,6 +697,13 @@ public class TransactionManager {
 								pie.site = new Integer(msg[1]);
 								pie.resource = (msg.length == 3 ? msg[2] : "");
 							}
+						}
+						break;
+					case TRANS:
+						if (msg.length == 1) {
+							pie.transactionId = -1;							
+						} else {
+							pie.transactionId = new Integer(msg[1]);							
 						}
 						break;
 				}

@@ -14,5 +14,6 @@ public enum OpCode {
 	RO,
 	DUMP,
 	FAIL,
-	RECOVER
+	RECOVER,
+	TRANS
 }
