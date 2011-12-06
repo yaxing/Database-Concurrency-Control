@@ -60,12 +60,14 @@ public class DataManager {
 		for(Map.Entry<String, String> entry : entries) {
 			String resource = entry.getKey();
 			int i = 0;
+			boolean unique = false;
 			for(; i < this.uniqueRes.length; i ++) {
 				if(resource == this.uniqueRes[i]) {
-					continue;
+					unique = true;
+					break;
 				}
 			}
-			if(i == this.uniqueRes.length - 1 || i == 0) {
+			if(!unique) {
 				res.add(resource);
 			}
 		}

@@ -104,8 +104,8 @@ public class Site{
 	 */
 	public void op_recover() {
 		this.status = 1;
-		ArrayList<String> uniq = dataMng.getReplicatedResource();
-		for(String res : uniq) {
+		ArrayList<String> nonUniq = dataMng.getReplicatedResource();
+		for(String res : nonUniq) {
 			lockMng.recoverLock(res);
 		}
 		dataMng.abortAllTx();
