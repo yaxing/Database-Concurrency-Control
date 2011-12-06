@@ -15,9 +15,9 @@ import nyu.ads.conctrl.site.entity.*;
  */
 public class DataManager {
 
-	private HashMap<String, String> db;//stable storage, actual db on this server, resource=>value
+	public HashMap<String, String> db;//stable storage, actual db on this server, resource=>value
 
-	private String[] uniqueRes; // used when recover, to lock 
+	public String[] uniqueRes; // used when recover, to lock 
 
 
 	/**
@@ -29,15 +29,15 @@ public class DataManager {
 	 * 
 	 * @see TransactionLogItemEnty
 	 */
-	private HashMap<Integer, ArrayList<TransactionLogItemEnty>> transactionLog; 
+	public HashMap<Integer, ArrayList<TransactionLogItemEnty>> transactionLog; 
 
 	/**
 	 * snapshot queue
 	 * 
 	 * only keep most recent snapshot_qty snapshots
 	 */
-	private int snapshot_qty = 20;
-	private HashMap<String, ArrayList<SnapShotEnty>> snapshots; //resource=>snapshots
+	public int snapshot_qty = 20;
+	public HashMap<String, ArrayList<SnapShotEnty>> snapshots; //resource=>snapshots
 												// snapshots: String[2] = (value, timestamp);
 
 	DataManager() {
@@ -80,7 +80,7 @@ public class DataManager {
 	 * @param resource
 	 * @param value
 	 */
-	private void logTransaction(int transacId, String resource, String value) {
+	public void logTransaction(int transacId, String resource, String value) {
 		ArrayList<TransactionLogItemEnty> loginfo = null;
 		if(!transactionLog.containsKey(transacId)) {
 			loginfo = new ArrayList<TransactionLogItemEnty>();
@@ -275,7 +275,7 @@ public class DataManager {
 	 * @param String timestamp
 	 * @return String[] a snapshot of resource
 	 */
-	private SnapShotEnty snapshotGen(String resource, TimeStamp timestamp) {
+	public SnapShotEnty snapshotGen(String resource, TimeStamp timestamp) {
 		return new SnapShotEnty(db.get(resource), timestamp);
 	} 
 

@@ -14,15 +14,15 @@ import nyu.ads.conctrl.site.entity.*;
  */
 public class Site{
 	
-	private String buffer;// message buffer, containing instructions for different transactions
+	public String buffer;// message buffer, containing instructions for different transactions
 	
-	private LockManager lockMng;// lock manager obj, to handle locks in a certain site
+	public LockManager lockMng;// lock manager obj, to handle locks in a certain site
 	
-	private DataManager dataMng;// data manager obj, to manage all data in this site, including r/w operations
+	public DataManager dataMng;// data manager obj, to manage all data in this site, including r/w operations
 	
-	private int status = 1; //0: failed, 1: running
+	public int status = 1; //0: failed, 1: running
 	
-	//private ArrayList<Integer> commitLog; //committed transaction id list, sorted based on timestamp
+	//public ArrayList<Integer> commitLog; //committed transaction id list, sorted based on timestamp
 	
 	public Site() {
 		buffer = "";

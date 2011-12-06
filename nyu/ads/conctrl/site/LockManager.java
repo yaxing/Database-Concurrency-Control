@@ -17,14 +17,14 @@ public class LockManager {
 	 * "resource"=>ArrayList<LockEnty>
 	 * @see LockEnty
 	 */
-	private HashMap<String, ArrayList<LockEnty>> locks; 
+	public HashMap<String, ArrayList<LockEnty>> locks; 
 
 	/**
 	 * replicated resources that are locked from reading when site recover
 	 * delete when certain resource is committed written
 	 * locked as -1
 	 */
-	private HashMap<String, Integer> recoverLocks; 
+	public HashMap<String, Integer> recoverLocks; 
 	
 	public LockManager() {
 		locks = new HashMap<String, ArrayList<LockEnty>>(); 
@@ -37,7 +37,7 @@ public class LockManager {
 	 * @param int transacId
 	 * @return
 	 */
-	private String conflictRespGen(String res, int transacId) {
+	public String conflictRespGen(String res, int transacId) {
 		StringBuilder buffer = new StringBuilder();
 		buffer.append(InstrCode.EXE_RESP + " 0 ");
 		ArrayList<LockEnty> lockInfo = locks.get(res);
@@ -72,7 +72,7 @@ public class LockManager {
 	 * @param boolean isExclusive
 	 * @return void
 	 */
-	private void newLock(int transacId, String res, LockType lockType) {
+	public void newLock(int transacId, String res, LockType lockType) {
 		if(locks.containsKey(res)) {
 			ArrayList<LockEnty> lockInfo = locks.get(res);
 			int count = 0;
@@ -153,7 +153,7 @@ public class LockManager {
 	 * @param int transacId transaction id
 	 * @return boolean
 	 */
-	private boolean isLockedByT(String res, int transacId) {
+	public boolean isLockedByT(String res, int transacId) {
 		ArrayList<LockEnty> lockInfo = locks.get(res);
 		for(LockEnty curLock : lockInfo) {
 			if(curLock.transacId == transacId) {
@@ -169,7 +169,7 @@ public class LockManager {
 	 * if there is one write lock, then current lock type is write 
 	 * @return LockType
 	 */
-	private LockType findCurrentLockType(String res) {
+	public LockType findCurrentLockType(String res) {
 		ArrayList<LockEnty> lockInfo = locks.get(res); 
 		for(LockEnty lock : lockInfo) {
 			if(lock.type == LockType.WRITE) {
@@ -249,7 +249,7 @@ public class LockManager {
 	/**
 	 * test output
 	 */
-	private void testOutputLocks() {
+	public void testOutputLocks() {
 		System.out.println("locks:{");
 		Set<Map.Entry<String, ArrayList<LockEnty>>> entries = locks.entrySet();
 		for(Map.Entry<String, ArrayList<LockEnty>> entry : entries) {
