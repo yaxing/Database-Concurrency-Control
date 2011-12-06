@@ -1,7 +1,6 @@
 package nyu.ads.conctrl.tm;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.*;
 import nyu.ads.conctrl.site.Site;
 import nyu.ads.conctrl.entity.*;
@@ -20,15 +19,11 @@ public class TransactionManager {
 	
 	public List<Site> siteList; // list of sites
 	
-	//public List<Resource> varList; // List of variables, and latest timestamp 
-	
 	public Map<String, List<Integer>> varLocations;
 	
 	public TimeStamp currentTimestamp;
 	
 	public List<ArrayList<Integer>> visitorList;
-	
-	//public List<Integer> commitLog; // List of committed transactions
 	
 	public static Boolean DEBUG = true; 
 	
@@ -149,10 +144,11 @@ public class TransactionManager {
 		// init sites
 		try {
 			File sitesFile = new File("sites");
-			Scanner sc = new Scanner(sitesFile);
-			sc.useDelimiter(System.getProperty("line.separator"));
-			while(sc.hasNext()){
-				String siteTextFull = sc.next();
+			FileInputStream fstream = new FileInputStream(sitesFile);
+			DataInputStream in = new DataInputStream(fstream);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String siteTextFull;
+			while((siteTextFull = br.readLine()) != null){
 				String[] siteText = siteTextFull.split(" ");
 				int site = new Integer(siteText[0]);
 				
@@ -169,8 +165,9 @@ public class TransactionManager {
 				
 				addVariableLocations(variables, site);
 				visitorList.add(new ArrayList<Integer>());
-			}			
-		} catch (FileNotFoundException e) {
+			}		
+			in.close();
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
