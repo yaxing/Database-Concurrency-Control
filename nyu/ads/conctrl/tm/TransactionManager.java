@@ -219,8 +219,8 @@ public class TransactionManager {
 			case RO:
 			case R:
 				return op_read(i);
-			case TRANS:
-				return op_trans(i);
+			case QUERYSTATE:
+				return op_querystate(i);
 			default:
 				return -1;
 		}		
@@ -232,7 +232,7 @@ public class TransactionManager {
 	 * @param i
 	 * @return
 	 */
-	public int op_trans(ParsedInstrEnty i) {
+	public int op_querystate(ParsedInstrEnty i) {
 		if(i.transactionId == -1) {
 			for (Transaction t : transTable.TransactionList) {
 				System.out.print("T" + t.transID + ": ");
@@ -540,15 +540,16 @@ public class TransactionManager {
 		String msg = "DUMP";
 		if(i.resource != null) {  msg += " " + i.resource; }
 		if(i.site != -1) {
-			System.out.println(sendToSite(i.site, msg));
+			String m = sendToSite(i.site, msg);
+			m = (m.equals("EXE_RESP -1") ? "FAILED" : m);
+			System.out.println("Site " + i.site +": " +m);
 		}
 		else {
 			List<String> result = sendAllSites(msg);
 			int siteI = 1;
 			for(String r : result)
 			{
-				
-				System.out.println("Site " + siteI + ": " + r);
+				System.out.println("Site " + siteI + ": " + (r.equals("EXE_RESP -1") ? "FAILED" : r));
 				siteI++;
 			}
 		}
@@ -790,7 +791,7 @@ public class TransactionManager {
 							}
 						}
 						break;
-					case TRANS:
+					case QUERYSTATE:
 						if (msg.length == 1) {
 							pie.transactionId = -1;							
 						} else {

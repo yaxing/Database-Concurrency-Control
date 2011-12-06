@@ -15,5 +15,5 @@ public enum OpCode {
 	DUMP,
 	FAIL,
 	RECOVER,
-	TRANS
+	QUERYSTATE
 }
