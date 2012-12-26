@@ -1,4 +1,5 @@
-4.1 Possibility 1 — Replicated Concurrency Control and Re- covery (RepCRec for short)
+Replicated Concurrency Control and Re- covery (RepCRec for short)
+
 Implement a distributed concurrency control algorithm and commit algo- rithm with replication. Variables x1, ..., x20 (that is, there are only 20 variables in whole database — the numbers between 1 and 20 will be re- ferred to as indexes below). Sites are 1 to 10. A copy is indicated by a dot.
 4
 Thus, x6.2 is the copy of variable x6 at site 2. The odd indexed variables are at one site each (i.e. 1 + index number mod 10 ). Even indexed variables are at all sites. Each variable xi is initialized to the value 10i.
